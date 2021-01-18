@@ -50,18 +50,33 @@ randomizing where necessary after accessing publicly available data.
 
 ## Installation instructions
 
-Having cloned this repo, conda should be used to create the required environment to run the code.
+The github repos can be cloned on to your local machine:
+```
+$ git clone git@github.com:jeremy-large/CODiT.git
+```
+Once cloned, you can either build and install the repos as a **conda** package, or you can simply add the repos lib dir to 
+your **PYTHONPATH** environment variable so that you can import the modules locally.
 
-TODO: Paul please elaborate 
+### 1) Installation as a conda package
 
-With this environment, code can be run provided that the environment variable, `PYTHONPATH`, has been set
-to `.../CODiT/lib`. To achieve this, the scripts `add_pythonpath.bat` and `add_pythonpath.sh` are provided, 
-for the cases, respectively, of Windows and Linux.
+If you're using conda you can enter the repos directory, build the CODiT conda package and then install it into your current conda environment:
+```
+$ cd CODiT
+$ conda build .
+$ conda install codit
+```
 
-When using pycharm to edit this code, show all project interpreters, select the one suitable for this project, 
-then, clicking on the 'tree' icon, add an environment variable called `PYTHONPATH`, 
-whose value is the absolute path of `.../CODiT/lib`. The testing infrastructure should be set to `pytest`, 
-rather than its common default.
+### 2) Local development
+
+Alternatively, you can add the lib directory in your local repos to your **PYTHONPATH** environment variable.  You can do this 
+manually, or there is handy a batch script for Windows in the repos called 
+[add_pypath.bat](https://github.com/jeremy-large/CODiT/blob/master/add_pypath.bat) that will do this for you.
+Similarly there is a bash script called 
+[add_pypath.sh](https://github.com/jeremy-large/CODiT/blob/master/add_pypath.sh) to do this under linux and osx.
+
+When using **pycharm** to edit and run this code, show all project interpreters, select the one suitable for this project, 
+then, clicking on the 'tree' icon, add an environment variable called **PYTHONPATH**,  whose value is the absolute path 
+of `.../CODiT/lib`. The testing infrastructure should be set to `pytest`, rather than its common default.
 
 ## Running instructions
 
