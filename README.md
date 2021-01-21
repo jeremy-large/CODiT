@@ -57,6 +57,10 @@ The github repos can be cloned on to your local machine:
 ```
 $ git clone git@github.com:jeremy-large/CODiT.git
 ```
+or
+```
+$ git clone https://github.com/jeremy-large/CODiT.git
+```
 Once cloned, you can either build and install the repos as a **conda** package, or you can simply add the repos lib dir to 
 your **PYTHONPATH** environment variable so that you can import the modules locally.
 
@@ -71,15 +75,38 @@ $ conda install codit
 
 ### 2) Local development
 
-Alternatively, you can add the lib directory in your local repos to your **PYTHONPATH** environment variable.  You can do this 
-manually, or there is handy a batch script for Windows in the repos called 
+If you are a developer looking to adapt CODiT to local needs, it is more likely that you will engage in some
+local development. 
+For this, you can add the `.../CODiT/lib` directory in your local repos to your **PYTHONPATH** environment variable.  
+
+You can do this manually, or there is handy a batch script for Windows in the repos called 
 [add_pypath.bat](https://github.com/jeremy-large/CODiT/blob/master/add_pypath.bat) that will do this for you.
 Similarly there is a bash script called 
 [add_pypath.sh](https://github.com/jeremy-large/CODiT/blob/master/add_pypath.sh) to do this under linux and osx.
 
-When using **pycharm** to edit and run this code, show all project interpreters, select the one suitable for this project, 
-then, clicking on the 'tree' icon, add an environment variable called **PYTHONPATH**,  whose value is the absolute path 
-of `.../CODiT/lib`. The testing infrastructure should be set to `pytest`, rather than its common default.
+You will also need to create a conda environment that is suitable for this project. 
+This can be achieved with the commands:
+
+```
+$ conda create -n tti -c anaconda python=3.8 scikit-learn=0.22.1 xlrd=1.1.0 pandas matplotlib jupyterlab nbconvert pydot networkx pytest
+$ conda activate tti
+```
+
+(thereby naming the environment `tti`)
+
+#### Local development with pycharm
+
+When using **pycharm** to edit and run this code, it will also be necessary to create a suitable project interpreter. 
+This can be achieved through the pycharm gui by
+
+1. setting the pycharm interpreter to use conda, and within conda selecting the environment, `tti`.
+
+1. adjusting this pycharm interpreter by extending its python path to point at your local version of the CODiT libraries.
+Select the interpreter from a list (it may be called `tti`), click on the 'tree' icon, 
+and add a directory to the displayed list which you specify to be the absolute path 
+of `.../CODiT/lib`. 
+ 
+1. set testing infrastructure to `pytest`, rather than its common default.
 
 ## Running instructions
 
