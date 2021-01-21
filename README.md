@@ -53,7 +53,7 @@ randomizing where necessary after accessing publicly available data.
 
 ## Installation instructions
 
-The github repos can be cloned on to your local machine:
+The github repo can be cloned on to your local machine:
 ```
 $ git clone git@github.com:jeremy-large/CODiT.git
 ```
@@ -61,16 +61,18 @@ or
 ```
 $ git clone https://github.com/jeremy-large/CODiT.git
 ```
-Once cloned, you can either build and install the repos as a **conda** package, or you can simply add the repos lib dir to 
+Once cloned, you can either build and install the repo as a **conda** package, or you can simply add the repo lib dir to 
 your **PYTHONPATH** environment variable so that you can import the modules locally.
 
 ### 1) Local development
 
 If you are a developer looking to adapt CODiT to local needs, it is more likely that you will engage in some
 local development. 
-For this, you can add the `.../CODiT/lib` directory in your local repos to your **PYTHONPATH** environment variable.  
 
-You can do this manually, or there is a handy batch script for Windows in the repos called 
+For this, you would add the `.../CODiT/lib` directory appearing in your local repo, 
+to your **PYTHONPATH** environment variable.  
+
+You can do this manually, or there is a handy batch script for Windows in the repo called 
 [add_pypath.bat](https://github.com/jeremy-large/CODiT/blob/master/add_pypath.bat) that will do this for you.
 Similarly there is a bash script called 
 [add_pypath.sh](https://github.com/jeremy-large/CODiT/blob/master/add_pypath.sh) to do this under linux and osx.
