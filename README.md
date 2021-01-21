@@ -64,22 +64,13 @@ $ git clone https://github.com/jeremy-large/CODiT.git
 Once cloned, you can either build and install the repos as a **conda** package, or you can simply add the repos lib dir to 
 your **PYTHONPATH** environment variable so that you can import the modules locally.
 
-### 1) Installation as a conda package
-
-If you're using conda you can enter the repos directory, build the CODiT conda package and then install it into your current conda environment:
-```
-$ cd CODiT
-$ conda build .
-$ conda install codit
-```
-
-### 2) Local development
+### 1) Local development
 
 If you are a developer looking to adapt CODiT to local needs, it is more likely that you will engage in some
 local development. 
 For this, you can add the `.../CODiT/lib` directory in your local repos to your **PYTHONPATH** environment variable.  
 
-You can do this manually, or there is handy a batch script for Windows in the repos called 
+You can do this manually, or there is a handy batch script for Windows in the repos called 
 [add_pypath.bat](https://github.com/jeremy-large/CODiT/blob/master/add_pypath.bat) that will do this for you.
 Similarly there is a bash script called 
 [add_pypath.sh](https://github.com/jeremy-large/CODiT/blob/master/add_pypath.sh) to do this under linux and osx.
@@ -108,6 +99,15 @@ of `.../CODiT/lib`.
  
 1. set testing infrastructure to `pytest`, rather than its common default.
 
+### 2) Installation as a conda package
+
+(Assuming you are using conda) you can enter the repo directory, 
+build the CODiT conda package and then install it into your current conda environment:
+```
+$ cd CODiT
+$ conda build --no-test .
+$ conda install codit
+```
 ## Running instructions
 
 Begin with `share/notebooks/overview.ipynb`. Copy this and run the copy in `jupyter lab`.
