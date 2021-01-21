@@ -5,7 +5,7 @@ package:
   version: {{ setup_data.version }}
 
 source:
-  git_url: git@github.com:jeremy-large/CODiT.git
+  git_url: https://github.com/jeremy-large/CODiT.git
   git_rev: {{ setup_data.version }}
 
 requirements:
