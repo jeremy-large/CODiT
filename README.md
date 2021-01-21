@@ -92,14 +92,14 @@ $ conda activate tti
 When using **pycharm** to edit and run this code, it will also be necessary to create a suitable project interpreter. 
 This can be achieved through the pycharm gui by
 
-1. setting the pycharm interpreter to use conda, and within conda selecting the environment, `tti`.
+1. setting the pycharm interpreter to use conda, and within conda selecting the environment, `tti`;
+ 
+1. setting testing infrastructure to `pytest`, rather than its common default.
 
 1. adjusting this pycharm interpreter by extending its python path to point at your local version of the CODiT libraries.
 Select the interpreter from a list (it may be called `tti`), click on the 'tree' icon, 
-and add a directory to the displayed list which you specify to be the absolute path 
-of `.../CODiT/lib`. 
- 
-1. set testing infrastructure to `pytest`, rather than its common default.
+and add to the displayed list a directory, which you specify to be the absolute path 
+of `.../CODiT/lib`;
 
 ### 2) Installation as a conda package
 
