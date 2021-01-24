@@ -34,7 +34,7 @@ a.	experience [relevant symptoms](https://github.com/jeremy-large/CODiT/blob/mas
 due both to C19 and to non-C19, and 
 b.	[pass-on C19 to contacts](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/person.py#L38) on a realistic timescale.
 
-2.	A network of physical contacts in Leeds at this time
+2.	A network of physical contacts in the region at a point in time
 a.	[Household structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city_config/typical_households.py#L8)
 b.	[Study- / work-place structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L123)
 c.  [School classroom structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L73))
@@ -108,7 +108,7 @@ build the CODiT conda package and then install it into your current conda enviro
 ```
 $ cd CODiT
 $ conda build --no-test .
-$ conda install codit
+$ conda install --use-local codit
 ```
 ## Running instructions
 
