@@ -17,9 +17,9 @@ requirements:
     - numpy
     - pandas
     - scikit-learn
-    - statsmodels
     - xlrd
     - matplotlib
+    - notebook
     - jupyterlab
     - nbconvert
     - pydot

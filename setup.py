@@ -6,7 +6,7 @@ from pathlib import Path
 
 setup(
     name="codit",
-    version="1.0.2",
+    version="1.0.3",
     package_dir={"": "lib"},
     packages=find_namespace_packages(where="lib"),
     data_files=[(str(dir), [str(fn) for fn in Path(dir).glob("*") if fn.is_file()]) for dir in Path("share").glob("**/*") if dir.is_dir()],
