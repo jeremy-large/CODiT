@@ -51,7 +51,7 @@ class Population:
     def infected(self, disease=None):
         if disease is None:
             return [p for p in self.people if p.immunities]
-        return [p for p in self.people if (disease in p.immunities)]
+        return [p for p in self.people if (disease in p.immunities and p.infected)]
 
     def update_time(self):
         for p in self.people:

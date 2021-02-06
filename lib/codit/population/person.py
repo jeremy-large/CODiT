@@ -21,6 +21,7 @@ class Person:
         self.time_since_infection = 0
         self.disease = None
         self.infector = None
+        self.infected = False
         self.victims = set()
         self.episode_time = 1. / self.society.episodes_per_day
         self.name = name
@@ -46,6 +47,7 @@ class Person:
 
     def set_infected(self, disease, infector=None):
         self.immunities.add(disease)
+        self.infected = True
         self.infectious = True
         self.disease = disease
         self.infector = infector

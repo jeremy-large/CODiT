@@ -62,7 +62,7 @@ class Outbreak:
 
         if type(self.disease) is set:
             self.recorder.disease_config = []
-            for d in self.disease: self.recorder.disease_config + [d.cfg]
+            for d in self.disease: self.recorder.disease_config += [d.cfg]
         else: self.recorder.disease_config = self.disease.cfg
 
         return self.recorder
