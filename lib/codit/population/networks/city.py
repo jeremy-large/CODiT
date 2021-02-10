@@ -103,14 +103,14 @@ def build_households(people):
     num_h = int(n_individuals / AVERAGE_HOUSEHOLD_SIZE)
     household_examples = build_characteristic_households(num_h)
     # create num_h of homes
-    homes_list = build_households_home_list(num_h)
-    logging.info(f"There are {len(homes_list)} households generated for accommodation buildings")
+    homes_examples = build_households_home_list(num_h)
+    logging.info(f"There are {len(homes_examples)} households generated for accommodation buildings")
 
     while assigned < n_individuals:
         ages = next_household_ages(household_examples)
         size = len(ages)
         # randomly pick up a home from list of homes
-        home = next_household_home(homes_list)
+        home_specification = next_household_home(homes_examples)
 
         if assigned + size > n_individuals:
             ages = ages[:n_individuals - assigned - size]
@@ -121,7 +121,7 @@ def build_households(people):
             indiv = people[j + assigned]
             indiv.age = age
             # Initialise Home instance with (coordinates and building_type) to each person's home attribute within the population
-            indiv.home = Home(home[0], home[1], home[2])
+            indiv.home = Home(*home_specification)
 
             hh.append(indiv)
         households.append(set(hh))
@@ -169,11 +169,11 @@ def next_workplace_size():
     return random.choice(household_workplace.WORKPLACE_SIZE_REPRESENTATIVE_EXAMPLES)
 
 
-def next_household_home(homes_list):
+def next_household_home(homes_examples):
     """
     Randomly pick up a ['lon', 'lat', 'building_type'] from homes list
-    :param: homes_list
+    :param: homes_examples
     :return: one home ['lon', 'lat', 'building_type']
     """
-    return random.choice(homes_list)
+    return random.choice(homes_examples)
 

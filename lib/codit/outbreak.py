@@ -108,12 +108,15 @@ class OutbreakRecorder:
         if o.step_num % (50 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
             logging.info(f"Day {int(step[0])}, prop infected is {step[1]:2.2f}, "
                          f"prop infectious is {step[2]:2.4f}")
+        self.record_image(o)
+        self.story.append(step)
+
+    def record_image(self, o):
         if self.visualiser:
             if o.step_num % (7 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
                 self.visualiser.generate_heatmap(o)
                 if o.step_num == o.n_periods:
                     self.visualiser.close_plt()
-        self.story.append(step)
 
     def plot(self, **kwargs):
         df = self.get_dataframe()
