@@ -6,22 +6,13 @@ from codit.population.population import FixedNetworkPopulation
 from codit.population.networks import household_workplace
 from codit.population.networks.city_config.city_cfg import MINIMUM_WORKING_AGE, MAXIMUM_WORKING_AGE, MAXIMUM_CLASS_AGE, MINIMUM_CLASS_AGE, AVERAGE_HOUSEHOLD_SIZE
 from codit.population.networks.city_config.typical_households import build_characteristic_households
-# Import home module
-from codit.population.networks.home import Home, build_households_home_list
+from codit.population.networks.home_locations import Home, get_home_samples
 
 EPHEMERAL_CONTACT = 0.1  # people per day
 
 
 class CityPopulation(FixedNetworkPopulation):
-    def reset_people(self, society):
-        """
-        Override reset_people() to allow the new attribute person.home in CityPopulation can be saved when reset the
-        population according to different type of society
-        :param society:
-        :return:
-        """
-        for person in self.people:
-            person.__init__(society, config=society.cfg.__dict__, name=person.name, home=person.home)
+
 
     def fix_cliques(self, encounter_size):
         """
@@ -103,7 +94,7 @@ def build_households(people):
     num_h = int(n_individuals / AVERAGE_HOUSEHOLD_SIZE)
     household_examples = build_characteristic_households(num_h)
     # create num_h of homes
-    homes_examples = build_households_home_list(num_h)
+    homes_examples = get_home_samples(num_h)
     logging.info(f"There are {len(homes_examples)} households generated for accommodation buildings")
 
     while assigned < n_individuals:
@@ -111,7 +102,8 @@ def build_households(people):
         size = len(ages)
         # randomly pick up a home from list of homes
         home_specification = next_household_home(homes_examples)
-
+        # Initialise Home instance with (coordinates and building_type) to each person's home attribute within the population
+        home = Home(*home_specification)
         if assigned + size > n_individuals:
             ages = ages[:n_individuals - assigned - size]
             size = len(ages)
@@ -120,8 +112,7 @@ def build_households(people):
         for j, age in enumerate(ages):
             indiv = people[j + assigned]
             indiv.age = age
-            # Initialise Home instance with (coordinates and building_type) to each person's home attribute within the population
-            indiv.home = Home(*home_specification)
+            indiv.home = home
 
             hh.append(indiv)
         households.append(set(hh))

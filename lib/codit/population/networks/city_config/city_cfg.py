@@ -1,6 +1,7 @@
 import pandas as pd
 from codit import share_dir
 
+
 def read_demographic_data(section, file_name, data_dir=share_dir() / "codit/data/city"):
     """
     :param section: population
@@ -11,12 +12,27 @@ def read_demographic_data(section, file_name, data_dir=share_dir() / "codit/data
     return pd.read_csv(data_dir / section / file_name, index_col=0)
 
 
+def print_city_paras(cities_dict):
+    for city in cities_dict:
+        print(city)
+        for para in cities_dict[city]:
+            print(para, ':', cities_dict[city][para])
+
+
+city_paras = \
+    {
+        'Leeds':
+        {
+            # Total population estimate of Leeds (2019) Source: ONS* https://observatory.leeds.gov.uk/population/
+            'population': 793139,
+            # Area str of Leeds for request to OpenStreetMap
+            'area_str': "area['ISO3166-2'='GB-LDS'][admin_level=8]"
+        }
+    }
+
+
 DEMO_DATA = (read_demographic_data('population', 'table-8.csv')["%"] / 100).to_dict()
 ROUNDING = 0.001  # rounding such that sum of rates equals 1
-
-
-POPULATION_CITY = 793139 # Total population estimate of Leeds (2019) Source: ONS* https://observatory.leeds.gov.uk/population/
-CITY_AREA = "area['ISO3166-2'='GB-LDS'][admin_level=8]" # Area str of Leeds for request to OpenStreetMap
 
 
 "Averages based on city's Data"
