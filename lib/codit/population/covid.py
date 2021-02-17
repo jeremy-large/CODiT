@@ -13,15 +13,15 @@ class PersonCovid(Person):
     def symptomatic(self):
         return self._symptomatic
 
-    def set_infected(self, disease, infector=None):
-        Person.set_infected(self, disease, infector=infector)
+    def set_infected(self, diseases, infector=None):
+        Person.set_infected(self, diseases, infector=infector)
         self.infectious = False
 
-    def update_disease(self, days):
+    def update_diseases(self, days):
         """
         :param days: days since you got infected with the disease
         """
-        cov = self.disease
+        cov = self.diseases
         if days == cov.days_before_infectious:
             self.infectious = True
 

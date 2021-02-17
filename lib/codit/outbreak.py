@@ -8,20 +8,20 @@ from codit.disease import covid_hazard
 
 
 class Outbreak:
-    def __init__(self, society, disease, pop_size=0, seed_size=0, n_days=0,
+    def __init__(self, society, diseases, pop_size=0, seed_size=0, n_days=0,
                  population=None,
                  population_type=None,
                  person_type=None):
 
         self.pop = self.prepare_population(pop_size, population, population_type, society, person_type)
         society.clear_queues()
-        self.pop.seed_infections(seed_size, disease)
+        self.pop.seed_infections(seed_size, diseases)
 
         self.initialize_timers(n_days, society.episodes_per_day)
         self.group_size = society.encounter_size
 
         self.society = society
-        self.disease = disease
+        self.diseases = diseases
 
         self.set_recorder()
 
@@ -60,10 +60,10 @@ class Outbreak:
         self.recorder.realized_r0 = self.pop.realized_r0()
         self.recorder.society_config = self.society.cfg
 
-        if type(self.disease) is set:
-            self.recorder.disease_config = []
-            for d in self.disease: self.recorder.disease_config += [d.cfg]
-        else: self.recorder.disease_config = self.disease.cfg
+        if type(self.diseases) is set:
+            self.recorder.diseases_config = []
+            for d in self.diseases: self.recorder.diseases_config += [d.cfg]
+        else: self.recorder.disease_config = self.diseases.cfg
 
         return self.recorder
 
@@ -89,7 +89,7 @@ class OutbreakRecorder:
         # pot_haz = sum([covid_hazard(person.age) for person in o.pop.people])
         # tot_haz = sum([covid_hazard(person.age) for person in o.pop.infected()])
         all_completed_tests = [t for q in o.society.queues for t in q.completed_tests]
-        variants = list(set(p.disease for p in o.pop.people) - {None})
+        variants = list(set(p.diseases for p in o.pop.people) - {None})
         step = [o.time,
                 o.pop.count_infected() / N,  # displays number of people infected with Default Covid
                 o.pop.count_infectious() / N,

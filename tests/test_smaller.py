@@ -25,8 +25,8 @@ def test_mutation():
 def test_multiple_strain_society():
     random.seed(42)
     variant_1 = Covid(pr_transmission_per_day=CFG.PROB_INFECT_IF_TOGETHER_ON_A_DAY["B.1.1.7"], name="B.1.1.7")
-    disease = {Covid(), variant_1}
-    o = Outbreak(TwoTrackTester(), disease, pop_size=5000, seed_size=50, n_days=150)
+    diseases = {Covid(), variant_1}
+    o = Outbreak(TwoTrackTester(), diseases, pop_size=5000, seed_size=50, n_days=150)
     o.simulate()
 
 

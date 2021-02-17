@@ -9,11 +9,11 @@ class Test:
         self.days_to_complete = time_to_complete + days_delayed_start
         self.notes = notes
         self.days_delayed_start = days_delayed_start
-        targets = [q for q in person.contacts if person.disease not in q.immunities]
+        targets = [q for q in person.contacts if person.diseases not in q.immunities]
         self._succeptible_contacts = len(targets)
         self._succeptible_contacts_of_contacts = \
-            len([s for v in targets for s in v.contacts if person.disease not in s.immunities])
-        self._days_infected = person.days_infected() if person.disease else None
+            len([s for v in targets for s in v.contacts if person.diseases not in s.immunities])
+        self._days_infected = person.days_infected() if person.diseases else None
         self._isolating = person.isolating
         self.swab_taken = False
 

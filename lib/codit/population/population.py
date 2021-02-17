@@ -31,9 +31,9 @@ class Population:
     def form_groupings(self, group_size):
         return (random.sample(self.people, group_size) for _ in range(len(self.people)))
 
-    def seed_infections(self, n_infected, disease, seed_periods=None):
-        if type(disease) is not set: disease = {disease}
-        for d in disease:
+    def seed_infections(self, n_infected, diseases, seed_periods=None):
+        if type(diseases) is not set: diseases = {diseases}
+        for d in diseases:
             seed_periods = seed_periods or d.days_infectious
             for p in random.sample(self.people, n_infected):
                 p.set_infected(d)
@@ -48,10 +48,10 @@ class Population:
     def count_infected(self, disease=None):
         return len(self.infected(disease))
 
-    def infected(self, disease=None):
-        if disease is None:
+    def infected(self, diseases=None):
+        if diseases is None:
             return [p for p in self.people if p.immunities]
-        return [p for p in self.people if (disease in p.immunities and p.infected)]
+        return [p for p in self.people if (diseases in p.immunities and p.infected)]
 
     def update_time(self):
         for p in self.people:
