@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
-# Need "pip install celluloid", celluloid -- a 3rd-party python lib using matplotlib.animation.ArtistAnimation
-from celluloid import Camera
+from matplotlib.animation import ArtistAnimation
 import numpy as np
 
 
@@ -28,7 +27,7 @@ class OutbreakVisualiser:
         self.plt = plt
         self.plt.rcParams["figure.figsize"] = [12, 5]
         self.fig = self.plt.figure(dpi=150)
-        self.camera = Camera(self.fig)
+        self.album_animation = []
         self.bin_num = max(int(300*len(pop.people)/1000000), 150)
         # set up heatmap range with all population's coordinates
         self.heatmap_range = setup_range_for_heatmap(pop, self.bin_num)
@@ -52,14 +51,16 @@ class OutbreakVisualiser:
 
                 extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
                 ax = self.plt.gca()
-                ax.text(0.1, 1.02,
+                vartext = ax.text(0.1, 1.02,
                         f'Day {int(o.time)}, prop infectious is {(o.pop.count_infectious() / len(o.pop.people)):2.4f} '
                         f'in simulated Leeds',
                         transform=ax.transAxes)
+
                 self.plt.xlabel('latitude')
                 self.plt.ylabel('longitude')
-                self.plt.imshow(heatmap.T, extent=extent, origin='lower', vmin=0, vmax=20)
-                self.camera.snap()
+                self.album_animation.append([self.plt.imshow(heatmap.T, extent=extent, origin='lower', vmin=0, vmax=20),
+                                             vartext])
+
 
     def show_heatmap_video(self, is_html5=False):
         """
@@ -67,8 +68,8 @@ class OutbreakVisualiser:
         :param is_html5:
         :return: H.264 video tag or jshtml video tag or (a string if no photos were taken)
         """
-        if len(self.camera.__getattribute__('_photos')) > 0:
-            animation = self.camera.animate(interval=1000, repeat=False)
+        if len(self.album_animation) > 0:
+            animation = ArtistAnimation(self.fig, self.album_animation, interval=1000, repeat=False)
             if is_html5:
                 return animation.to_html5_video()
             else:
