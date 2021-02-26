@@ -18,12 +18,10 @@ class Person:
         self.isolation = None
         self.infectious = False
         self.time_since_infection = 0
-        self.diseases = None
+        self.disease = None
         self.infector = None
-        self.covid_experiences = set()
-        # self.immunities = set()
-        # self.infected = False
         self.victims = set()
+        self.covid_experiences = []
         self.episode_time = 1. / self.society.episodes_per_day
         self.name = name
 
@@ -36,36 +34,37 @@ class Person:
     def symptomatic(self):
         return self.infectious
 
-    # @property
-    # def infected(self):
-    #    return len(self.covid_experiences) > 0
+    @property
+    def infected(self):
+        return len(self.covid_experiences) > 0
 
-    # @property
-    # def immunities(self):
-    #    """
-    #    The idea is that the immunities a person have are a simple dictionary lookup of their covid_experiences
-    #    """
-    #    immunities = set()
-    #    for d in self.covid_experiences:
-    #        immunities.add(self.cfg.CROSS_IMMUNITY[d])
-    #    # for v in self.vacciations:
-    #    #    immunities.add(self.cfg.VACCINATION_IMMUNITY[v])
-    #    return immunities
+    @property
+    def immunities(self):
+        """
+        The idea is that the immunities a person have are a simple dictionary lookup of their covid_experiences
+        """
+        immunities = set()
+        for d in self.covid_experiences:
+            immunities |= self.cfg.CROSS_IMMUNITY[str(d)]
+        # for v in self.vacciations:
+        #    immunities.add(self.cfg.VACCINATION_IMMUNITY[v])
+        return immunities
 
     def attack(self, other, days):
         if self.infectious:
             self.infectious_attack(other, days)
 
     def infectious_attack(self, other, days):
-        if self.diseases not in other.immunities:
-            if random.random() < self.diseases.pr_transmit_per_day * days:
-                other.set_infected(self.diseases, infector=self)
+        if str(self.disease) not in other.immunities:
+            if random.random() < self.disease.pr_transmit_per_day * days:
+                other.set_infected(self.disease, infector=self)
                 self.victims.add(other)
 
-    def set_infected(self, diseases, infector=None):
-        self.covid_experiences.add(diseases)
+    def set_infected(self, disease, infector=None):
+        assert str(disease) not in self.immunities
+        self.covid_experiences.append(disease)
         self.infectious = True
-        self.diseases = diseases
+        self.disease = disease
         self.infector = infector
 
     def isolate(self):
@@ -82,7 +81,7 @@ class Person:
 
     def recover(self):
         self.infectious = False
-        self.diseases = None
+        self.disease = None
 
     def update_time(self):
 
@@ -90,9 +89,9 @@ class Person:
             self.isolation.update_time(self.episode_time)
             self.consider_leaving_isolation()
 
-        if self.diseases is not None:
+        if self.disease is not None:
             self.time_since_infection += 1
-            self.update_diseases(self.days_infected())
+            self.update_disease(self.days_infected())
         else:
             pass
 
@@ -103,8 +102,8 @@ class Person:
         if self.isolation.days_elapsed > self.cfg.DURATION_OF_ISOLATION:
             self.leave_isolation()
 
-    def update_diseases(self, days_since_infect):
-        if days_since_infect == self.diseases.days_infectious:
+    def update_disease(self, days_since_infect):
+        if days_since_infect == self.disease.days_infectious:
             self.recover()
 
     def chain(self):

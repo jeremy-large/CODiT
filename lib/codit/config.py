@@ -20,6 +20,10 @@ class CFG:
 
     # Society:
     PROB_INFECT_IF_TOGETHER_ON_A_DAY = {'SARS-CoV-2': 0.025, 'B.1.1.7': 0.039}
+    CROSS_IMMUNITY = {'other': {'other'},
+                      'SARS-CoV-2': {'SARS-CoV-2'},
+                       'B.1.1.7': {'B.1.1.7'}
+                      }
     # this is a moving target - because depends on hand-washing, masks ...
     # 'B.1.1.7' 56% more infectious than initial strain
     PROB_NON_C19_SYMPTOMS_PER_DAY = 0.01  # like b - probability someone unnecessarily requests a test on a given day

@@ -61,9 +61,9 @@ class Outbreak:
         self.recorder.society_config = self.society.cfg
 
         if type(self.diseases) is set:
-            self.recorder.diseases_config = []
-            for d in self.diseases: self.recorder.diseases_config += [d.cfg]
-        else: self.recorder.disease_config = self.diseases.cfg
+            self.recorder.disease_config = [d.cfg for d in self.diseases]
+        else:
+            self.recorder.disease_config = self.diseases.cfg
 
         return self.recorder
 
@@ -89,7 +89,7 @@ class OutbreakRecorder:
         # pot_haz = sum([covid_hazard(person.age) for person in o.pop.people])
         # tot_haz = sum([covid_hazard(person.age) for person in o.pop.infected()])
         all_completed_tests = [t for q in o.society.queues for t in q.completed_tests]
-        variants = list(set(p.diseases for p in o.pop.people) - {None})
+        variants = list({d for p in o.pop.people for d in p.covid_experiences})
         step = [o.time,
                 o.pop.count_infected() / N,  # displays number of people infected with Default Covid
                 o.pop.count_infectious() / N,

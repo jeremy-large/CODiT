@@ -35,7 +35,7 @@ class Disease:
     """
     This is not a case of a disease, it is the strain of disease.
     """
-    def __init__(self, days_infectious, pr_transmission_per_day, name=None, config=None):
+    def __init__(self, days_infectious, pr_transmission_per_day, name='other', config=None):
         set_config(self, config)
         self.days_infectious = days_infectious
         self.pr_transmit_per_day = set_infectivity(name, pr_transmission_per_day)
@@ -46,7 +46,7 @@ class Disease:
 
 
 class Covid(Disease):
-    def __init__(self, days_infectious=None, pr_transmission_per_day=None, name=None, config=None):
+    def __init__(self, days_infectious=None, pr_transmission_per_day=None, name='', config=None):
         set_config(self, config)
         days_infectious = days_infectious or (self.cfg.DAYS_INFECTIOUS_TO_SYMPTOMS + self.cfg.DAYS_OF_SYMPTOMS)
         pr_transmission_per_day = pr_transmission_per_day or self.cfg.PROB_INFECT_IF_TOGETHER_ON_A_DAY
