@@ -34,9 +34,13 @@ class Population:
     def seed_infections(self, n_infected, diseases, seed_periods=None):
         if type(diseases) is not set:
             diseases = {diseases}
+        if type(n_infected) is not dict:
+            assert type(n_infected) == int
+            n_infected = {str(d): n_infected for d in diseases}
         for d in diseases:
             seed_periods = seed_periods or d.days_infectious
-            for p in random.sample(self.people, n_infected):
+            succeptibles = [p for p in self.people if p.succeptible_to(d)]
+            for p in random.sample(succeptibles, n_infected[str(d)]):
                 p.set_infected(d)
                 stage = random.random() * seed_periods
                 while p.days_infected() < stage:

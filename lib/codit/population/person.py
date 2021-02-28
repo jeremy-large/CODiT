@@ -24,6 +24,7 @@ class Person:
         self.covid_experiences = []
         self.episode_time = 1. / self.society.episodes_per_day
         self.name = name
+        self.vaccinations = []
 
     def __repr__(self):
         if self.name is None:
@@ -46,22 +47,28 @@ class Person:
         immunities = set()
         for d in self.covid_experiences:
             immunities |= self.cfg.CROSS_IMMUNITY[str(d)]
-        # for v in self.vacciations:
-        #    immunities.add(self.cfg.VACCINATION_IMMUNITY[v])
+        for v in self.vaccinations:
+            immunities |= self.cfg.VACCINATION_IMMUNITY[v]
         return immunities
+
+    def succeptible_to(self, disease):
+        return str(disease) not in self.immunities
+
+    def vaccinate(self, vaccine):
+        self.vaccinations.append(vaccine)
 
     def attack(self, other, days):
         if self.infectious:
             self.infectious_attack(other, days)
 
     def infectious_attack(self, other, days):
-        if str(self.disease) not in other.immunities:
+        if other.succeptible_to(self.disease):
             if random.random() < self.disease.pr_transmit_per_day * days:
                 other.set_infected(self.disease, infector=self)
                 self.victims.add(other)
 
     def set_infected(self, disease, infector=None):
-        assert str(disease) not in self.immunities
+        assert self.succeptible_to(disease)
         self.covid_experiences.append(disease)
         self.infectious = True
         self.disease = disease
