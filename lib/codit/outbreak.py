@@ -91,7 +91,7 @@ class OutbreakRecorder:
         all_completed_tests = [t for q in o.society.queues for t in q.completed_tests]
         variants = list({d for p in o.pop.people for d in p.covid_experiences})
         step = [o.time,
-                o.pop.count_infected() / N,  # displays number of people infected with Default Covid
+                o.pop.count_infected() / N,
                 o.pop.count_infectious() / N,
                 len(all_completed_tests) / N / o.time_increment,
                 sum(len([t for t in q.tests if t.swab_taken]) for q in o.society.queues) / N,

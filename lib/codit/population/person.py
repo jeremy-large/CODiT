@@ -54,7 +54,7 @@ class Person:
     def succeptible_to(self, disease):
         return str(disease) not in self.immunities
 
-    def vaccinate(self, vaccine):
+    def vaccinate_with(self, vaccine):
         self.vaccinations.append(vaccine)
 
     def attack(self, other, days):
