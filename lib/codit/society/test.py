@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 
+
 class Test:
     def __init__(self, person, notes, time_to_complete, days_delayed_start=0):
         self.days_elapsed = 0
@@ -9,10 +10,11 @@ class Test:
         self.days_to_complete = time_to_complete + days_delayed_start
         self.notes = notes
         self.days_delayed_start = days_delayed_start
-        targets = [q for q in person.contacts if not q.infected]
+        targets = [q for q in person.contacts if not q.immunities]
         self._succeptible_contacts = len(targets)
-        self._succeptible_contacts_of_contacts = len([s for v in targets for s in v.contacts if not s.infected])
-        self._days_infected = person.days_infected() if person.infected else None
+        self._succeptible_contacts_of_contacts = \
+            len([s for v in targets for s in v.contacts if not s.immunities])
+        self._days_infected = person.days_infected() if person.disease else None
         self._isolating = person.isolating
         self.swab_taken = False
 
