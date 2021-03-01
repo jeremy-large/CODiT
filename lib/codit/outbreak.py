@@ -11,7 +11,7 @@ from codit.disease import covid_hazard
 
 
 class Outbreak:
-    def __init__(self, society, disease, pop_size=0, seed_size=0, n_days=0,
+    def __init__(self, society, diseases, pop_size=0, seed_size=0, n_days=0,
                  population=None,
                  population_type=None,
                  person_type=None,
@@ -19,13 +19,13 @@ class Outbreak:
 
         self.pop = self.prepare_population(pop_size, population, population_type, society, person_type)
         society.clear_queues()
-        self.pop.seed_infections(seed_size, disease)
+        self.pop.seed_infections(seed_size, diseases)
 
         self.initialize_timers(n_days, society.episodes_per_day)
         self.group_size = society.encounter_size
 
         self.society = society
-        self.disease = disease
+        self.diseases = diseases
         # Add a switch of heatmap video
         self.set_recorder(show_heatmap=show_heatmap)
 
@@ -65,7 +65,12 @@ class Outbreak:
 
         self.recorder.realized_r0 = self.pop.realized_r0()
         self.recorder.society_config = self.society.cfg
-        self.recorder.disease_config = self.disease.cfg
+
+        if type(self.diseases) is set:
+            self.recorder.disease_config = [d.cfg for d in self.diseases]
+        else:
+            self.recorder.disease_config = self.diseases.cfg
+
         return self.recorder
 
     def update_time(self):
@@ -96,6 +101,7 @@ class OutbreakRecorder:
         # tot_haz = sum([covid_hazard(person.age) for person in o.pop.infected()])
 
         all_completed_tests = [t for q in o.society.queues for t in q.completed_tests]
+        variants = list({d for p in o.pop.people for d in p.covid_experiences})
         step = [o.time,
                 o.pop.count_infected() / N,
                 o.pop.count_infectious() / N,
@@ -105,6 +111,12 @@ class OutbreakRecorder:
                 # len([t for t in all_completed_tests if t.positive]) / N / o.time_increment,
                 # tot_haz/pot_haz,
                 ]
+
+        step_variants = [variants,
+                         [o.pop.count_infected(d) for d in variants],
+                         [o.pop.count_infectious(d) for d in variants]]
+        # TODO : Implement a way to record infect & infectious based on variants
+
         if o.step_num % (50 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
             logging.info(f"Day {int(step[0])}, prop infected is {step[1]:2.2f}, "
                          f"prop infectious is {step[2]:2.4f}")

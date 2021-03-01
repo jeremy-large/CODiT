@@ -2,6 +2,7 @@
 class CFG:
 
     # Disease:
+    DEFAULT_COVID = "SARS-CoV-2"
     _TARGET_R0 = 1.4  # before Test and Trace and Isolation
 
     DAYS_BEFORE_INFECTIOUS = 4   # t0
@@ -18,7 +19,19 @@ class CFG:
     DURATION_OF_ISOLATION = 10   #tIsol
 
     # Society:
-    PROB_INFECT_IF_TOGETHER_ON_A_DAY = 0.025  # this is a moving target - because depends on hand-washing, masks ...
+    PROB_INFECT_IF_TOGETHER_ON_A_DAY = {'SARS-CoV-2': 0.025, 'B.1.1.7': 0.039}
+
+    CROSS_IMMUNITY = {'other': {'other'},
+                      'SARS-CoV-2': {'SARS-CoV-2', 'B.1.1.7'},
+                      'B.1.1.7': {'SARS-CoV-2', 'B.1.1.7'}
+                      }
+
+    VACCINATION_IMMUNITY = {'AstraZeneca': {'SARS-CoV-2', 'B.1.1.7'},
+                            'Pfizer': {'SARS-CoV-2', 'B.1.1.7'}
+                            }
+
+    # this is a moving target - because depends on hand-washing, masks ...
+    # 'B.1.1.7' 56% more infectious than initial strain
     PROB_NON_C19_SYMPTOMS_PER_DAY = 0.01  # like b - probability someone unnecessarily requests a test on a given day
     PROB_TEST_IF_REQUESTED = 1            # pG   # set to 1 ... however, see the next parameter ... with capacity idea
     DAILY_TEST_CAPACITY_PER_HEAD = 0.0075  # being very generous here ... this is probably more like 0.005
@@ -29,7 +42,8 @@ class CFG:
     # Simulator
     SIMULATOR_PERIODS_PER_DAY = 1
 
-    MEAN_NETWORK_SIZE = 1 +_TARGET_R0 / (DAYS_INFECTIOUS_TO_SYMPTOMS + DAYS_OF_SYMPTOMS) /  PROB_INFECT_IF_TOGETHER_ON_A_DAY
+    MEAN_NETWORK_SIZE = 1 +_TARGET_R0 / (DAYS_INFECTIOUS_TO_SYMPTOMS + DAYS_OF_SYMPTOMS) / \
+                        PROB_INFECT_IF_TOGETHER_ON_A_DAY['SARS-CoV-2']
     # the above formula, and the _TARGET_R0 concept, assumes that all people have identical network size
 
     _PROPORTION_OF_INFECTED_WHO_GET_TESTED = PROB_SYMPTOMATIC * \
