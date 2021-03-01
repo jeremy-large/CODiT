@@ -10,8 +10,24 @@ from codit.disease import Covid
 from codit.population.networks.radial_age import RadialAgePopulation
 from codit.population.networks.household_workplace import HouseholdWorkplacePopulation
 from codit.population.networks.city import CityPopulation
+from codit.config import CFG
 
 ALL_TIME_DAYS = 15
+
+
+def test_mutation():
+    random.seed(42)
+    mutation = Covid(pr_transmission_per_day=CFG.PROB_INFECT_IF_TOGETHER_ON_A_DAY["B.1.1.7"], name="B.1.1.7")
+    o = Outbreak(TwoTrackTester(), mutation, pop_size=5000, seed_size=50, n_days=150)
+    o.simulate()
+
+
+def test_multiple_strain_society():
+    random.seed(42)
+    variant_1 = Covid(pr_transmission_per_day=CFG.PROB_INFECT_IF_TOGETHER_ON_A_DAY["B.1.1.7"], name="B.1.1.7")
+    diseases = {Covid(), variant_1}
+    o = Outbreak(TwoTrackTester(), diseases, pop_size=5000, seed_size=50, n_days=150)
+    o.simulate()
 
 
 def test_two_track_society():

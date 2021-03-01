@@ -17,14 +17,14 @@ class Person:
         self.society = society
         self.isolation = None
         self.infectious = False
-        self.immune = False
         self.time_since_infection = 0
         self.disease = None
         self.infector = None
         self.victims = set()
-        self.infected = False
+        self.covid_experiences = []
         self.episode_time = 1. / self.society.episodes_per_day
         self.name = name
+        self.vaccinations = []
 
     def __repr__(self):
         if self.name is None:
@@ -35,19 +35,41 @@ class Person:
     def symptomatic(self):
         return self.infectious
 
+    @property
+    def infected(self):
+        return len(self.covid_experiences) > 0
+
+    @property
+    def immunities(self):
+        """
+        The idea is that the immunities a person have are a simple dictionary lookup of their covid_experiences
+        """
+        immunities = set()
+        for d in self.covid_experiences:
+            immunities |= self.cfg.CROSS_IMMUNITY[str(d)]
+        for v in self.vaccinations:
+            immunities |= self.cfg.VACCINATION_IMMUNITY[v]
+        return immunities
+
+    def succeptible_to(self, disease):
+        return str(disease) not in self.immunities
+
+    def vaccinate_with(self, vaccine):
+        self.vaccinations.append(vaccine)
+
     def attack(self, other, days):
         if self.infectious:
             self.infectious_attack(other, days)
 
     def infectious_attack(self, other, days):
-        if not other.infected:
+        if other.succeptible_to(self.disease):
             if random.random() < self.disease.pr_transmit_per_day * days:
                 other.set_infected(self.disease, infector=self)
                 self.victims.add(other)
 
     def set_infected(self, disease, infector=None):
-        assert self.disease is None
-        self.infected = True
+        assert self.succeptible_to(disease)
+        self.covid_experiences.append(disease)
         self.infectious = True
         self.disease = disease
         self.infector = infector
@@ -66,7 +88,6 @@ class Person:
 
     def recover(self):
         self.infectious = False
-        self.immune = True
         self.disease = None
 
     def update_time(self):
@@ -93,7 +114,7 @@ class Person:
             self.recover()
 
     def chain(self):
-        assert self.infected, f"We cannot generate a chain for a person who has not been infected. {self}"
+        assert self.covid_experiences, f"We cannot generate a chain for a person who has not been infected. {self}"
         chain = [self]
         m_inf = self.infector
         while m_inf is not None:
