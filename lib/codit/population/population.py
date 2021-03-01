@@ -13,7 +13,7 @@ class Population:
 
     def reset_people(self, society):
         for person in self.people:
-            person.__init__(society, config=society.cfg.__dict__, name=person.name)
+            person.__init__(society, config=society.cfg.__dict__, name=person.name, home=person.home)
 
     def attack_in_groupings(self, group_size):
         groups = self.form_groupings(group_size)

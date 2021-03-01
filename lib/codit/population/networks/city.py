@@ -6,11 +6,14 @@ from codit.population.population import FixedNetworkPopulation
 from codit.population.networks import household_workplace
 from codit.population.networks.city_config.city_cfg import MINIMUM_WORKING_AGE, MAXIMUM_WORKING_AGE, MAXIMUM_CLASS_AGE, MINIMUM_CLASS_AGE, AVERAGE_HOUSEHOLD_SIZE
 from codit.population.networks.city_config.typical_households import build_characteristic_households
+from codit.population.networks.home_locations import Home, get_home_samples
 
 EPHEMERAL_CONTACT = 0.1  # people per day
 
 
 class CityPopulation(FixedNetworkPopulation):
+
+
     def fix_cliques(self, encounter_size):
         """
         :param encounter_size: not used
@@ -88,14 +91,19 @@ def build_households(people):
     n_individuals = len(people)
     assigned = 0
     households = []
-
     num_h = int(n_individuals / AVERAGE_HOUSEHOLD_SIZE)
     household_examples = build_characteristic_households(num_h)
+    # create num_h of homes
+    homes_examples = get_home_samples(num_h)
+    logging.info(f"There are {len(homes_examples)} households generated for accommodation buildings")
 
     while assigned < n_individuals:
         ages = next_household_ages(household_examples)
         size = len(ages)
-
+        # randomly pick up a home from list of homes
+        home_specification = next_household_home(homes_examples)
+        # Initialise Home instance with (coordinates and building_type) to each person's home attribute within the population
+        home = Home(*home_specification)
         if assigned + size > n_individuals:
             ages = ages[:n_individuals - assigned - size]
             size = len(ages)
@@ -104,6 +112,8 @@ def build_households(people):
         for j, age in enumerate(ages):
             indiv = people[j + assigned]
             indiv.age = age
+            indiv.home = home
+
             hh.append(indiv)
         households.append(set(hh))
         assigned += size
@@ -148,3 +158,13 @@ def build_workplaces(people, classroom_size=-1):
 
 def next_workplace_size():
     return random.choice(household_workplace.WORKPLACE_SIZE_REPRESENTATIVE_EXAMPLES)
+
+
+def next_household_home(homes_examples):
+    """
+    Randomly pick up a ['lon', 'lat', 'building_type'] from homes list
+    :param: homes_examples
+    :return: one home ['lon', 'lat', 'building_type']
+    """
+    return random.choice(homes_examples)
+
