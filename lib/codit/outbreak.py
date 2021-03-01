@@ -1,17 +1,21 @@
 import pandas as pd
 import logging
 
+
 from codit.population.covid import PersonCovid
 from codit.population.population import FixedNetworkPopulation
-
+from codit.outbreakvisualiser import OutbreakVisualiser
 from codit.disease import covid_hazard
+
+
 
 
 class Outbreak:
     def __init__(self, society, diseases, pop_size=0, seed_size=0, n_days=0,
                  population=None,
                  population_type=None,
-                 person_type=None):
+                 person_type=None,
+                 show_heatmap=False):
 
         self.pop = self.prepare_population(pop_size, population, population_type, society, person_type)
         society.clear_queues()
@@ -22,8 +26,9 @@ class Outbreak:
 
         self.society = society
         self.diseases = diseases
+        # Add a switch of heatmap video
+        self.set_recorder(show_heatmap=show_heatmap)
 
-        self.set_recorder()
 
     def prepare_population(self, pop_size, population, population_type, society, person_type):
         if population:
@@ -40,8 +45,8 @@ class Outbreak:
         person_type = person_type or PersonCovid
         return population_type(pop_size, society, person_type=person_type)
 
-    def set_recorder(self, recorder=None):
-        self.recorder = recorder or OutbreakRecorder()
+    def set_recorder(self, recorder=None, show_heatmap=False):
+        self.recorder = recorder or OutbreakRecorder(self, show_heatmap)
 
     def initialize_timers(self, n_days, enc_per_day):
         self.n_days = n_days
@@ -57,6 +62,7 @@ class Outbreak:
             self.society.manage_outbreak(self.pop)
             self.pop.attack_in_groupings(self.group_size)
             self.record_state()
+
         self.recorder.realized_r0 = self.pop.realized_r0()
         self.recorder.society_config = self.society.cfg
 
@@ -80,14 +86,20 @@ class Outbreak:
 
 
 class OutbreakRecorder:
-    def __init__(self):
+    def __init__(self, o, show_heatmap=False):
         self.story = []
         self.realized_r0 = None
+        if show_heatmap:
+            self.visualiser = OutbreakVisualiser(o.pop)
+        else:
+            self.visualiser = None
+
 
     def record_step(self, o):
         N = len(o.pop.people)
         # pot_haz = sum([covid_hazard(person.age) for person in o.pop.people])
         # tot_haz = sum([covid_hazard(person.age) for person in o.pop.infected()])
+
         all_completed_tests = [t for q in o.society.queues for t in q.completed_tests]
         variants = list({d for p in o.pop.people for d in p.covid_experiences})
         step = [o.time,
@@ -108,7 +120,15 @@ class OutbreakRecorder:
         if o.step_num % (50 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
             logging.info(f"Day {int(step[0])}, prop infected is {step[1]:2.2f}, "
                          f"prop infectious is {step[2]:2.4f}")
+        self.record_image(o)
         self.story.append(step)
+
+    def record_image(self, o):
+        if self.visualiser:
+            if o.step_num % (7 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
+                self.visualiser.generate_heatmap(o)
+                if o.step_num == o.n_periods:
+                    self.visualiser.close_plt()
 
     def plot(self, **kwargs):
         df = self.get_dataframe()
@@ -123,3 +143,15 @@ class OutbreakRecorder:
                       'tested daily', 'waiting for test results', 'isolating']  # , 'daily_detected_']
         df = df.set_index('days of epidemic')
         return df
+
+    def outbreak_visualise(self, is_html5=False):
+        """
+        show heatmap_video in notebook
+        :return: video tag or a string
+        """
+        if self.visualiser:
+            return self.visualiser.show_heatmap_video(is_html5)
+        else:
+            return "Video has been switched off!"
+
+

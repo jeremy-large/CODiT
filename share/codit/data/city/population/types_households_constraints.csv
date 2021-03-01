@@ -1,0 +1,15 @@
+building_type,min_households,max_households
+apartments,20,100
+bungalow,1,1
+cabin,1,1
+detached,1,1
+dormitory,0,0
+farm,1,1
+ger,0,0
+hotel,0,0
+house,1,1
+houseboat,1,1
+residential,1,3
+semidetached_house,1,1
+static_caravan,0,0
+terrace,10,40

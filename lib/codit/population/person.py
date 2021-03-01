@@ -12,7 +12,7 @@ class Isolation:
 
 
 class Person:
-    def __init__(self, society, config=None, name=None):
+    def __init__(self, society, config=None, name=None, home=None):
         set_config(self, config)
         self.society = society
         self.isolation = None
@@ -25,6 +25,8 @@ class Person:
         self.episode_time = 1. / self.society.episodes_per_day
         self.name = name
         self.vaccinations = []
+        # Add home attribute for CityPopulation
+        self.home = home
 
     def __repr__(self):
         if self.name is None:
