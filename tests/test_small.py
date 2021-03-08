@@ -1,7 +1,8 @@
 import random
 import numpy as np
 
-from codit.outbreak import Outbreak, VariantComponent
+from codit.outbreak import Outbreak
+from codit.outbreak_recorder import VariantComponent
 from codit.society import TestingTracingSociety, ContactTestingSociety
 from codit.society.strategic import TwoTrackTester
 from codit.disease import Covid
