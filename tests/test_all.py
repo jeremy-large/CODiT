@@ -24,7 +24,7 @@ def test_uk_ovespill_model():
     # TODO: I believe the correct solution is for the simulator to be constructed with its own np.random.RandomState class
     #
     return
-    np.testing.assert_allclose(o.recorder.story[40:45] == [[41.0, 0.035, 0.0, 0.007, 0.467, 0.452],
+    np.testing.assert_allclose(o.recorder.main_component.story[40:45] == [[41.0, 0.035, 0.0, 0.007, 0.467, 0.452],
                                                            [42.0, 0.035, 0.0, 0.007, 0.458, 0.442],
                                                            [43.0, 0.035, 0.0, 0.007, 0.461, 0.447],
                                                            [44.0, 0.035, 0.0, 0.007, 0.458, 0.448],
@@ -46,7 +46,7 @@ def test_covid_model():
 
     random.seed(42)
     o.simulate()
-    np.testing.assert_allclose(o.recorder.story[90:95], [[18.2, 0.103, 0.044, 0.0, 0.0, 0.023],
+    np.testing.assert_allclose(o.recorder.main_component.story[90:95], [[18.2, 0.103, 0.044, 0.0, 0.0, 0.023],
                                                          [18.4, 0.103, 0.046, 0.0, 0.0, 0.023],
                                                          [18.6, 0.103, 0.045, 0.0, 0.0, 0.021],
                                                          [18.8, 0.105, 0.043, 0.0, 0.0, 0.019],
@@ -70,7 +70,7 @@ def test_draconian_population_model():
     o = Outbreak(s, d, pop_size=1000, seed_size=2, n_days=ALL_TIME_DAYS, population_type=Population, person_type=Person)
     # so, this is a village of 10000 people with 2 starting off infected
     o.simulate()
-    np.testing.assert_allclose(o.recorder.story[90:95], [[18.2, 0.002, 0.0, 0.0, 0.0, 0.0],
+    np.testing.assert_allclose(o.recorder.main_component.story[90:95], [[18.2, 0.002, 0.0, 0.0, 0.0, 0.0],
                                                          [18.4, 0.002, 0.0, 0.0, 0.0, 0.0],
                                                          [18.6, 0.002, 0.0, 0.0, 0.0, 0.0],
                                                          [18.8, 0.002, 0.0, 0.0, 0.0, 0.0],
@@ -85,7 +85,7 @@ def test_toy_model():
     o = Outbreak(s, d, pop_size=1000, seed_size=2, n_days=ALL_TIME_DAYS, population_type=Population, person_type=Person)
     # so, this is a village of 10000 people with 2 starting off infected
     o.simulate()
-    np.testing.assert_allclose(o.recorder.story[90:95], [[18.2, 0.619,  0.57, 0.0, 0.0, 0.0],
+    np.testing.assert_allclose(o.recorder.main_component.story[90:95], [[18.2, 0.619,  0.57, 0.0, 0.0, 0.0],
                                                          [18.4, 0.643, 0.592, 0.0, 0.0, 0.0],
                                                          [18.6, 0.656, 0.603, 0.0, 0.0, 0.0],
                                                          [18.8, 0.673, 0.618, 0.0, 0.0, 0.0],

@@ -1,13 +1,8 @@
-import pandas as pd
 import logging
 
-
+from codit.outbreak_recorder import OutbreakRecorder
 from codit.population.covid import PersonCovid
 from codit.population.population import FixedNetworkPopulation
-from codit.outbreakvisualiser import OutbreakVisualiser
-from codit.disease import covid_hazard
-
-
 
 
 class Outbreak:
@@ -83,75 +78,3 @@ class Outbreak:
 
     def plot(self, **kwargs):
         self.recorder.plot(**kwargs)
-
-
-class OutbreakRecorder:
-    def __init__(self, o, show_heatmap=False):
-        self.story = []
-        self.realized_r0 = None
-        if show_heatmap:
-            self.visualiser = OutbreakVisualiser(o.pop)
-        else:
-            self.visualiser = None
-
-
-    def record_step(self, o):
-        N = len(o.pop.people)
-        # pot_haz = sum([covid_hazard(person.age) for person in o.pop.people])
-        # tot_haz = sum([covid_hazard(person.age) for person in o.pop.infected()])
-
-        all_completed_tests = [t for q in o.society.queues for t in q.completed_tests]
-        variants = list({d for p in o.pop.people for d in p.covid_experiences})
-        step = [o.time,
-                o.pop.count_infected() / N,
-                o.pop.count_infectious() / N,
-                len(all_completed_tests) / N / o.time_increment,
-                sum(len([t for t in q.tests if t.swab_taken]) for q in o.society.queues) / N,
-                sum(p.isolating for p in o.pop.people) / N,
-                # len([t for t in all_completed_tests if t.positive]) / N / o.time_increment,
-                # tot_haz/pot_haz,
-                ]
-
-        step_variants = [variants,
-                         [o.pop.count_infected(d) for d in variants],
-                         [o.pop.count_infectious(d) for d in variants]]
-        # TODO : Implement a way to record infect & infectious based on variants
-
-        if o.step_num % (50 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
-            logging.info(f"Day {int(step[0])}, prop infected is {step[1]:2.2f}, "
-                         f"prop infectious is {step[2]:2.4f}")
-        self.record_image(o)
-        self.story.append(step)
-
-    def record_image(self, o):
-        if self.visualiser:
-            if o.step_num % (7 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
-                self.visualiser.generate_heatmap(o)
-                if o.step_num == o.n_periods:
-                    self.visualiser.close_plt()
-
-    def plot(self, **kwargs):
-        df = self.get_dataframe()
-        ax = (df.drop(columns=['ever infected']) * 100).plot(grid=True, **kwargs)
-        ax.set_ylabel("percent of the population")
-        logging.info(f" Realized R0 of early infections is {self.realized_r0:2.2f}")
-        logging.info(f" {self.story[-1][1] * 100:2.1f} percent of the proportion was infected during the epidemic")
-
-    def get_dataframe(self):
-        df = pd.DataFrame(self.story)
-        df.columns = ['days of epidemic', 'ever infected', 'infectious',
-                      'tested daily', 'waiting for test results', 'isolating']  # , 'daily_detected_']
-        df = df.set_index('days of epidemic')
-        return df
-
-    def outbreak_visualise(self, is_html5=False):
-        """
-        show heatmap_video in notebook
-        :return: video tag or a string
-        """
-        if self.visualiser:
-            return self.visualiser.show_heatmap_video(is_html5)
-        else:
-            return "Video has been switched off!"
-
-
