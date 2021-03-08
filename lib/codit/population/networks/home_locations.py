@@ -12,7 +12,6 @@ from codit import share_dir
 DATA_PATH = os.path.join(share_dir(), 'codit', 'data')
 COORDINATES_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates.csv')
 TYPES_CONSTRAINTS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'types_households_constraints.csv')
-COORDINATES_NUM_HOUSEHOLDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_num_households.csv')
 FULL_HOME_LIST_CSV = os.path.join(DATA_PATH, 'city', 'population', 'full_home_list.csv')
 
 building_types = ["apartments",
@@ -88,39 +87,30 @@ def merge_building_types_constraints_to_accommodations(types_count_list, types_c
     return pd.merge(df_types_count, df_types_constraints, on="building_type", how="inner")
 
 
-def allocate_households_to_each_building(num_of_households, list_types_average_households, list_coords):
+def allocate_households_to_each_building(list_types_average_households, list_coords):
     """
-    If there's a previously saved csv file, then directly use the previously generated full list in the csv file
-    to save time.
     Use Poisson distribution to randomly allocate specified number of households to each accommodation building, as Poisson
     distribution is discreet non-negative integers, here we use the return from (Possion() + Min number of households
     for that type of accommodation building) as the number of households for each accommodation building
-
-    :param num_of_households: Total number of households to be allocated
     :param list_types_average_households: list of ['building_type', 'number of buildings for each building type',\
     ('average_num_households of that building type'-'min_households of that building type'), 'min_households of that building type']
     :param list_coords: list of coordinates of all accommodation buildings with building_type
     :return: full list of ['lon', 'lat', 'building_type', 'num_of_households'] for all the accommodation buildings
-    while saving the full list to csv file
     """
-    if os.path.isfile(COORDINATES_NUM_HOUSEHOLDS_CSV):
-        df_result = pd.read_csv(COORDINATES_NUM_HOUSEHOLDS_CSV)
-    else:
-        valid = 0
-        df_coords_types = pd.DataFrame(list_coords, columns=['lon', 'lat', 'building_type'])
-        while valid != num_of_households:
-            df_result = pd.DataFrame()
-            list_num_households = []
-            for types_average_households in list_types_average_households:
-                list_num_households = list(types_average_households[3] + np.random.poisson(types_average_households[2],
-                                                                                           size=types_average_households[
-                                                                                               1]))
-                df_temp = pd.DataFrame(df_coords_types[df_coords_types['building_type'] == types_average_households[0]])
-                df_temp['num_of_households'] = list_num_households
-                df_result = pd.concat([df_result, df_temp])
-            valid = np.sum(df_result['num_of_households'])
 
-        df_result.to_csv(COORDINATES_NUM_HOUSEHOLDS_CSV, index=False)
+    valid = 0
+    df_coords_types = pd.DataFrame(list_coords, columns=['lon', 'lat', 'building_type'])
+
+    df_result = pd.DataFrame()
+    list_num_households = []
+    for types_average_households in list_types_average_households:
+        list_num_households = list(types_average_households[3] + np.random.poisson(types_average_households[2],
+                                                                                   size=types_average_households[
+                                                                                       1]))
+        df_temp = pd.DataFrame(df_coords_types[df_coords_types['building_type'] == types_average_households[0]])
+        df_temp['num_of_households'] = list_num_households
+        df_result = pd.concat([df_result, df_temp])
+
     return df_result.values.tolist()
 
 
@@ -131,27 +121,16 @@ def build_households_home_list(total_h=50000):
     :return: a full list of ['lon', 'lat', 'building_type']
     """
     coords_types = get_coords(COORDINATES_CSV)
-    types_counts = count_coords_for_types(coords_types)
-    df_types_constraints_households = merge_building_types_constraints_to_accommodations(types_counts, TYPES_CONSTRAINTS_CSV)
-
-    aver_num_households = (df_types_constraints_households['min_households'] + df_types_constraints_households['max_households']) / 2
-    df_types_constraints_households['average_num_households'] = aver_num_households
-    init_total_households = np.sum(df_types_constraints_households['number'] * aver_num_households)
-    index_apartments = df_types_constraints_households['building_type']=='apartments'
-    remaining_households_in_apartments = total_h - (init_total_households - df_types_constraints_households.loc[index_apartments, 'average_num_households'] *
-                                                    df_types_constraints_households.loc[index_apartments, 'number'])
-    df_types_constraints_households.loc[index_apartments, 'average_num_households'] = remaining_households_in_apartments\
-                                                                                      / df_types_constraints_households.loc[index_apartments, 'number']
-    df_types_constraints_households.drop('max_households', axis=1, inplace=True)
-
+    df_types_constraints_households = generate_average_number_homes_for_building_type(total_h, coords_types)
     list_types_average_households = list(
         zip(df_types_constraints_households['building_type'], df_types_constraints_households['number'],
-            df_types_constraints_households['average_num_households'] - df_types_constraints_households['min_households'],
+            df_types_constraints_households['average_num_households'] - df_types_constraints_households[
+                'min_households'],
             df_types_constraints_households['min_households']))
-    list_num_households_per_building = allocate_households_to_each_building(total_h, list_types_average_households, coords_types)
+    list_num_households_per_building = allocate_households_to_each_building(list_types_average_households, coords_types)
+
     list_households_info = []
     for num_households_per_building in list_num_households_per_building:
-
         if int(num_households_per_building[3]) > 0:
             list_households_info += [num_households_per_building[:3]] * int(num_households_per_building[3])
     df_home_list = pd.DataFrame(list_households_info, columns=['lon', 'lat', 'building_type'])
@@ -169,5 +148,30 @@ def get_home_samples(total_h=50000):
             return home_specs
         else:
             return random.sample(home_specs, total_h)
+
+
+def generate_average_number_homes_for_building_type(total_h, coords_types):
+    """
+    Calculate average number of homes in each type of accommodation building
+    :param total_h: num of homes
+    :param coords_types: list of [float(coord['lon']), float(coord['lat']), str(coord['building_type'])]
+    :return: dataframe with columns=['building_type','number', 'average_num_households', 'min_households']
+    """
+    types_counts = count_coords_for_types(coords_types)
+    df_types_constraints_households = merge_building_types_constraints_to_accommodations(types_counts,
+                                                                                         TYPES_CONSTRAINTS_CSV)
+    aver_num_households = (df_types_constraints_households['min_households'] + df_types_constraints_households[
+        'max_households']) / 2
+    df_types_constraints_households['average_num_households'] = aver_num_households
+    init_total_households = np.sum(df_types_constraints_households['number'] * aver_num_households)
+    index_apartments = df_types_constraints_households['building_type'] == 'apartments'
+    remaining_households_in_apartments = total_h - (init_total_households - df_types_constraints_households.loc[
+        index_apartments, 'average_num_households'] *
+                                                    df_types_constraints_households.loc[index_apartments, 'number'])
+    df_types_constraints_households.loc[index_apartments, 'average_num_households'] = \
+        remaining_households_in_apartments / df_types_constraints_households.loc[index_apartments, 'number']
+    df_types_constraints_households.drop('max_households', axis=1, inplace=True)
+    return df_types_constraints_households
+
 
 
