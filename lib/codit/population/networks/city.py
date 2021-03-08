@@ -13,20 +13,19 @@ EPHEMERAL_CONTACT = 0.1  # people per day
 
 class CityPopulation(FixedNetworkPopulation):
 
-
     def fix_cliques(self, encounter_size):
         """
         :param encounter_size: not used
         :return:
         """
-        static_cliques = build_city_cliques(self.people)
+        static_cliques = build_city_cliques(self.people, self.lockdown_level)
         logging.info(f"Adding {len(static_cliques)} permanent contact groups")
         dynamic_cliques = FixedNetworkPopulation.fix_cliques(self, EPHEMERAL_CONTACT)
         logging.info(f"Adding {len(dynamic_cliques)} ephemeral contact pairs")
         return static_cliques + dynamic_cliques
 
 
-def build_city_cliques(people):
+def build_city_cliques(people, lockdown_level=0):
     """
     :param people: a list of population.covid.PersonCovid() objects
     :return: a list of little sets, each is a 'clique' in the graph, some are households, some are workplaces
@@ -37,7 +36,7 @@ def build_city_cliques(people):
     households = build_households(people)
     report_size(households, 'households')
 
-    classrooms = build_class_groups(people)
+    classrooms = build_class_groups(people, lockdown_level=lockdown_level)
 
     working_age_people = [p for p in people if MINIMUM_WORKING_AGE < p.age < MAXIMUM_WORKING_AGE]
     teachers = random.sample(working_age_people, len(classrooms))
@@ -49,7 +48,7 @@ def build_city_cliques(people):
 
     working_age_people = list(set(working_age_people) - set(teachers) - set(carers))
     random.shuffle(working_age_people)
-    workplaces = build_workplaces(working_age_people)
+    workplaces = build_workplaces(working_age_people, lockdown_level=lockdown_level)
     report_size(workplaces, 'workplaces')
 
     return households + workplaces + classrooms + care_homes
@@ -73,13 +72,16 @@ def report_size(care_homes, ch):
     logging.info(f"{len(care_homes)} {ch} of mean size {np.mean([len(x) for x in care_homes]):2.2f}")
 
 
-def build_class_groups(people):
+def build_class_groups(people, lockdown_level=0):
     classrooms = []
     for kids_age in range(MINIMUM_CLASS_AGE, MAXIMUM_CLASS_AGE+1):
         schoolkids = [p for p in people if p.age == kids_age]
         random.shuffle(schoolkids)
-        classrooms += build_workplaces(schoolkids, classroom_size=30)
+        classrooms += build_workplaces(schoolkids, classroom_size=30, lockdown_level=lockdown_level)
     logging.info(f"Only putting children >{MINIMUM_CLASS_AGE} years old into classrooms.")
+    if lockdown_level > 0:
+        logging.info(f"There are {lockdown_level*100}% of classrooms closed due to lockdown, now {len(classrooms)} of "
+                     f"classrooms are open")
     return classrooms
 
 
@@ -130,14 +132,18 @@ def next_household_ages(household_list):
     return random.choice(household_list)
 
 
-def build_workplaces(people, classroom_size=-1):
+def build_workplaces(people, classroom_size=-1, lockdown_level=0):
     """
+
     :param people: lets for now let these be a list of N population.covid.PersonCovid() objects
+    :param classroom_size: specify number of students in one classroom for each age group
+    :param lockdown_level: specify number of workplaces closed for lockdown
     :return: a list of workplaces, where workplaces are a list of person objects.
     """
     n_individuals = len(people)
     assigned = 0
     workplaces = []
+    remaining_workplaces = []
     while assigned < n_individuals:
         if classroom_size > 0:
             size = 30
@@ -153,7 +159,14 @@ def build_workplaces(people, classroom_size=-1):
         workplaces.append(set(hh))
         assigned += size
 
-    return workplaces
+    if classroom_size == -1:
+        logging.info(f"Initially created {len(workplaces)} workplaces")
+    remaining_workplaces = random.sample(workplaces, int(len(workplaces) * (1-lockdown_level)))
+    if lockdown_level > 0:
+        if classroom_size == -1:
+            logging.info(f"After lockdown, there are {len(remaining_workplaces)} workplaces open")
+
+    return remaining_workplaces
 
 
 def next_workplace_size():
