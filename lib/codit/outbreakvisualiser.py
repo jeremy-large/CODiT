@@ -83,3 +83,26 @@ class OutbreakVisualiser:
         :return:
         """
         self.plt.close()
+
+
+class VisualizerComponent:
+    def __init__(self, is_html5, o):
+        self.is_html5 = is_html5
+        self.visualiser = OutbreakVisualiser(o.pop)
+
+    def outbreak_visualise(self, is_html5=False):
+        """
+        show heatmap_video in notebook
+        :return: video tag or a string
+        """
+        if self.visualiser:
+            return self.visualiser.show_heatmap_video(is_html5)
+        else:
+            return "Video has been switched off!"
+
+    def update(self, o):
+        if self.visualiser:
+            if o.step_num % (7 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
+                self.visualiser.generate_heatmap(o)
+                if o.step_num == o.n_periods:
+                    self.visualiser.close_plt()
