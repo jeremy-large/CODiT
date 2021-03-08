@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 import pandas as pd
 from codit.outbreakvisualiser import VisualizerComponent
@@ -80,6 +81,8 @@ class WardComponent:
         self.wards = list({p.home.ward for p in o.pop.people if p.home.ward.name})
         self.infected = []
         self.infectious = []
+        self.positive_tests = []
+        self._pos_week = []
         self.people_of = dict()
         for ward in self.wards:
             self.people_of[ward] = [p for p in o.pop.people if p.home.ward == ward]
@@ -93,8 +96,22 @@ class WardComponent:
                                [sum([p.infectious for p in self.people_of[w]]) / len(self.people_of[w]) for w in
                                 self.wards]
                                )
+        pos_tests = [t for q in o.society.queues for t in q.completed_tests if t.positive]
+
+        self._pos_week.append([len([t for t in pos_tests if t.person.home.ward == w]) for w in self.wards])
+        if len(self._pos_week) > 7:
+            # TODO using a 7 above is ad-hoc
+            self._pos_week = self._pos_week[1:]
+
+        self.positive_tests.append([o.time] +
+                               [sum(d[i] for d in self._pos_week)
+                                / len(self.people_of[w]) for i, w in enumerate(self.wards)]
+                               )
 
     def dataframe(self, story):
         df = pd.DataFrame(story)
         df.columns = ['days of epidemic'] + [w.name for w in self.wards]
+        df = df.T
+        order = np.argsort(df.iloc[:, -1:].values, axis=None)  # get the order of the last column
+        df = df.iloc[np.flip(order)].T
         return df.set_index('days of epidemic')

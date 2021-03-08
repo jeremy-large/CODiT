@@ -57,6 +57,7 @@ class Person:
         return str(disease) not in self.immunities
 
     def vaccinate_with(self, vaccine):
+        assert vaccine in self.cfg.VACCINATION_IMMUNITY
         self.vaccinations.append(vaccine)
 
     def attack(self, other, days):
