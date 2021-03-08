@@ -73,3 +73,28 @@ class VariantComponent:
                            variants,
                            [o.pop.count_infected(d) for d in variants],
                            [o.pop.count_infectious(d) for d in variants]])
+
+
+class WardComponent:
+    def __init__(self, o):
+        self.wards = list({p.home.ward for p in o.pop.people if p.home.ward.name})
+        self.infected = []
+        self.infectious = []
+        self.people_of = dict()
+        for ward in self.wards:
+            self.people_of[ward] = [p for p in o.pop.people if p.home.ward == ward]
+
+    def update(self, o):
+        self.infected.append([o.time] +
+                             [sum([p.infected for p in self.people_of[w]]) / len(self.people_of[w]) for w in self.wards]
+                             )
+
+        self.infectious.append([o.time] +
+                               [sum([p.infectious for p in self.people_of[w]]) / len(self.people_of[w]) for w in
+                                self.wards]
+                               )
+
+    def dataframe(self, story):
+        df = pd.DataFrame(story)
+        df.columns = ['days of epidemic'] + [w.name for w in self.wards]
+        return df.set_index('days of epidemic')
