@@ -104,7 +104,6 @@ def build_households(people):
         size = len(ages)
         # randomly pick up a home from list of homes
         home_specification = next_household_home(homes_examples)
-        # Initialise Home instance with (coordinates and building_type) to each person's home attribute within the population
         home = Home(*home_specification)
         if assigned + size > n_individuals:
             ages = ages[:n_individuals - assigned - size]
