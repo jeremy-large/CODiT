@@ -8,6 +8,7 @@ import csv
 import numpy as np
 import random
 from codit import share_dir
+from codit.population.networks.regions import Ward
 
 DATA_PATH = os.path.join(share_dir(), 'codit', 'data')
 COORDINATES_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates.csv')
@@ -31,9 +32,10 @@ building_types = ["apartments",
 
 
 class Home:
-    def __init__(self, lon=0.0, lat=0.0, accommodation_type=''):
+    def __init__(self, lon=None, lat=None, accommodation_type='', ward_code='', ward_name=''):
         self.coordinate = {'lon': lon, 'lat': lat}
         self.type = accommodation_type
+        self.ward = Ward(ward_code, ward_name)
 
 
 def get_coords(csvfilename):
@@ -142,7 +144,11 @@ def get_home_samples(total_h=50000):
     home_specs = []
     with open(FULL_HOME_LIST_CSV, 'r') as csv_homes_f:
         home_specs_rd = csv.DictReader(csv_homes_f)
-        home_specs += [[float(home_spec['lon']), float(home_spec['lat']), str(home_spec['building_type'])] for home_spec
+        home_specs += [[float(home_spec['lon']),
+                        float(home_spec['lat']),
+                        str(home_spec['building_type']),
+                        str(home_spec['ward_code']),
+                        str(home_spec['ward_name'])] for home_spec
                        in home_specs_rd]
         if len(home_specs) < total_h:
             return home_specs

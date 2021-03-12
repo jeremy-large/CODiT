@@ -2,6 +2,7 @@ import random
 import numpy as np
 
 from codit.outbreak import Outbreak
+from codit.outbreak_recorder import WardComponent
 from codit.society import TestingTracingSociety
 from codit.society.alternatives import StrategicTester
 from codit.society.strategic import TwoTrackTester
@@ -55,6 +56,7 @@ def test_two_track_city_society():
     o = Outbreak(LateralFlowUK(config=dict(SIMULATOR_PERIODS_PER_DAY=4, DAILY_TEST_CAPACITY_PER_HEAD=1)), Covid(),
                  pop_size=8000, seed_size=8000//80, n_days=150,
                  population_type=CityPopulation)
+    o.recorder.add_component(WardComponent(o))
     o.simulate()
 
 
