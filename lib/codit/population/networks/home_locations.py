@@ -17,7 +17,7 @@ COORDINATES_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates.csv
 TYPES_CONSTRAINTS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'types_households_constraints.csv')
 FULL_HOME_LIST_CSV = os.path.join(DATA_PATH, 'city', 'population', 'full_home_list.csv')
 COORDINATES_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_wards_list.csv')
-POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'Leeds_Wards_Population.csv')
+POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv')
 
 building_types = ["apartments",
                   "bungalow",
