@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+
+"""
+A script to join some raw population and Deprivation stats together for each lsoa.
+"""
+
+import argparse
+from pathlib import Path
+from smart_open import open
+from codit import share_dir
+import pandas as pd
+
+POPULATION_XLS = share_dir() / "codit" / "data" / "UK_regions" / "SAPE22DT13-mid-2019-lsoa-Broad_ages-estimates-unformatted.xlsx"
+DEPRIVATION_CSV = share_dir() / "codit" / "data" / "UK_regions" / "imd2019lsoa.csv.gz"
+OUTPUT_CSV = share_dir() / "codit" / "data" / "city" / "population" / "sample_lsoa_population.csv.gz"
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("population_xls", nargs="?", type=Path, default=POPULATION_XLS, help="Path to population excel file")
+    parser.add_argument("deprivation_csv", nargs="?", type=Path, default=DEPRIVATION_CSV, help="Path to deprivation csv file")
+    parser.add_argument("output_csv", nargs="?", type=Path, default=OUTPUT_CSV, help="Path to population excel file")
+    parser.add_argument("-r", "--region", help="Optional filter for region (eg 'Leeds')")
+    args = parser.parse_args()
+
+    # Read CSV file and rename population column
+    data = pd.read_excel(args.population_xls, "Mid-2019 Persons", index_col=0, usecols="A,B,G", skiprows=4)
+    data.rename(columns={"All Ages": "Total Population"}, inplace=True)
+
+    # Filter by region if specified
+    if args.region:
+        data = data[data["LSOA Name"].str.startswith(args.region)]
+
+    # Load the deprivation_csv file
+    with open(args.deprivation_csv) as fh:
+        dep = pd.read_csv(fh, index_col=0)
+
+    # Join each deprivation index as a new column for each lsoa
+    for dep_idx in dep["Indices of Deprivation"].unique():
+        for measure in dep["Measurement"].unique():
+            data = data.join(dep.loc[(dep['Indices of Deprivation'] == dep_idx) & (dep['Measurement'] == measure)]["Value"])
+            data.rename(columns={"Value": f"{dep_idx}:{measure}"}, inplace=True)
+
+    # Write output csv file
+    with open(args.output_csv, "wb") as fh:
+        data.to_csv(fh)
+
+if __name__ == "__main__":
+    main()
