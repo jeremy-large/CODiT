@@ -148,8 +148,8 @@ def allocate_households_to_each_building(df_types_average_households, list_coord
     df_result = pd.DataFrame()
     for _, hh_types in df_types_average_households.iterrows():
         if hh_types['number'] > 0:
-            list_num_households_per_type = hh_types['average_num_households'] + \
-                                           np.random.poisson(hh_types['min_households'], size=hh_types['number'])
+            list_num_households_per_type = hh_types['min_households'] + \
+                                           np.random.poisson(hh_types['mean_minus_min'], size=hh_types['number'])
             df_temp = homes[homes['building_type'] == hh_types['building_type']]
             df_temp['num_of_households'] = list_num_households_per_type
             df_result = pd.concat([df_result, df_temp])
