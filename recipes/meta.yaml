@@ -24,6 +24,8 @@ requirements:
     - nbconvert
     - pydot
     - networkx
+    - geopandas
+    - overpy
 
 test:
   imports:
