@@ -183,7 +183,16 @@ def build_households_home_list():
     Build a full list of households: ['lon', 'lat', 'building_type'] with 'district_code', 'district_name'
     :return: a full list of ['lon', 'lat', 'building_type', 'district_code', 'district_name']
     """
-    df_coordinates = pd.read_csv(DISTRICT_PARAMETERS['Ward']['intermediary_file'])
+    df_coordinates_ward = pd.read_csv(DISTRICT_PARAMETERS['Ward']['intermediary_file'])
+    df_coordinates_lsoa = pd.read_csv(DISTRICT_PARAMETERS['LSOA']['intermediary_file'])
+    df_coordinates = pd.merge(df_coordinates_ward, df_coordinates_lsoa, on=['lon', 'lat', 'building_type'])
+    additional_columns = []
+    additional_columns += DISTRICT_PARAMETERS['Ward']['output_additional_columns']
+    additional_columns += DISTRICT_PARAMETERS['LSOA']['output_additional_columns']
+    df_coordinates.loc[:, additional_columns] = df_coordinates.loc[:, additional_columns].replace('', np.nan)
+    # Given coordinates outliers only 4-6 for either Wards or LSOA allocations,
+    # remove coordinates without either Wards or LSOAs:
+    df_coordinates.dropna(inplace=True)
     coords_types = df_coordinates.to_dict('records')
     population_district = get_population_district('Ward')
     list_households_info = []
@@ -205,21 +214,12 @@ def build_households_home_list():
 
 def get_home_samples(total_h=50000):
     home_specs = []
-    with open(FULL_HOME_LIST_CSV, 'r') as csv_homes_f:
-        home_specs_rd = csv.DictReader(csv_homes_f)
-        home_specs += [[float(home_spec['lon']),
-                        float(home_spec['lat']),
-                        str(home_spec['building_type']),
-                        str(home_spec['ward_code']),
-                        str(home_spec['ward_name']),
-                        str(home_spec['lsoa_code']),
-                        str(home_spec['lsoa_name'])
-                        ] for home_spec
-                       in home_specs_rd]
-        if len(home_specs) < total_h:
-            return home_specs
-        else:
-            return random.sample(home_specs, total_h)
+    df_home_specs = pd.read_csv(FULL_HOME_LIST_CSV)
+    home_specs = df_home_specs.values.tolist()
+    if len(home_specs) < total_h:
+        return home_specs
+    else:
+        return random.sample(home_specs, total_h)
 
 
 def generate_average_number_homes_for_building_type(total_h, coords_types):
