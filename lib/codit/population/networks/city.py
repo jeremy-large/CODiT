@@ -2,7 +2,7 @@ import random
 import numpy as np
 import logging
 
-from codit.population.population import FixedNetworkPopulation
+from codit.population.population import FixedNetworkPopulation, Population
 from codit.population.networks import household_workplace
 from codit.population.networks.city_config.city_cfg import MINIMUM_WORKING_AGE, MAXIMUM_WORKING_AGE, MAXIMUM_CLASS_AGE, MINIMUM_CLASS_AGE, AVERAGE_HOUSEHOLD_SIZE
 from codit.population.networks.city_config.typical_households import build_characteristic_households
@@ -13,19 +13,38 @@ EPHEMERAL_CONTACT = 0.1  # people per day
 
 class CityPopulation(FixedNetworkPopulation):
 
-    def fix_cliques(self, encounter_size):
+    def __init__(self, n_people, society, person_type=None, lockdown_config=None):
+        Population.__init__(self, n_people, society, person_type=person_type)
+        self.households, self.workplaces, self.classrooms, self.care_homes = build_city_structures(self.people)
+        self.set_structure(society, lockdown_config=lockdown_config)
+
+    def fix_cliques(self, encounter_size, group_size=None, lockdown_config=None):
         """
         :param encounter_size: not used
+        :param group_size: not used
         :return:
         """
-        static_cliques = build_city_cliques(self.people, self.lockdown_level)
+        lockdown_config = lockdown_config or {'classrooms': 0, 'workplaces': 0}
+        static_cliques = self.build_city_cliques(lockdown_config)
         logging.info(f"Adding {len(static_cliques)} permanent contact groups")
         dynamic_cliques = FixedNetworkPopulation.fix_cliques(self, EPHEMERAL_CONTACT)
         logging.info(f"Adding {len(dynamic_cliques)} ephemeral contact pairs")
         return static_cliques + dynamic_cliques
 
+    def build_city_cliques(self, lockdown_config):
 
-def build_city_cliques(people, lockdown_level=0):
+        def _suppress(grouping, name, factor):
+            n_retained = int(len(grouping) * (1 - factor))
+            logging.info(f"{factor * 100}% of {name} closed by lockdown, leaving {n_retained} open.")
+            return random.sample(grouping, n_retained)
+
+        workplaces = _suppress(self.workplaces, 'workplaces', lockdown_config['workplaces'])
+        classrooms = _suppress(self.classrooms, 'classrooms', lockdown_config['classrooms'])
+
+        return self.households + workplaces + classrooms + self.care_homes
+
+
+def build_city_structures(people):
     """
     :param people: a list of population.covid.PersonCovid() objects
     :return: a list of little sets, each is a 'clique' in the graph, some are households, some are workplaces
@@ -36,7 +55,7 @@ def build_city_cliques(people, lockdown_level=0):
     households = build_households(people)
     report_size(households, 'households')
 
-    classrooms = build_class_groups(people, lockdown_level=lockdown_level)
+    classrooms = build_class_groups(people)
 
     working_age_people = [p for p in people if MINIMUM_WORKING_AGE < p.age < MAXIMUM_WORKING_AGE]
     teachers = random.sample(working_age_people, len(classrooms))
@@ -48,10 +67,10 @@ def build_city_cliques(people, lockdown_level=0):
 
     working_age_people = list(set(working_age_people) - set(teachers) - set(carers))
     random.shuffle(working_age_people)
-    workplaces = build_workplaces(working_age_people, lockdown_level=lockdown_level)
+    workplaces = build_workplaces(working_age_people)
     report_size(workplaces, 'workplaces')
 
-    return households + workplaces + classrooms + care_homes
+    return households, workplaces, classrooms, care_homes
 
 
 def is_care_home(home):
@@ -72,16 +91,12 @@ def report_size(care_homes, ch):
     logging.info(f"{len(care_homes)} {ch} of mean size {np.mean([len(x) for x in care_homes]):2.2f}")
 
 
-def build_class_groups(people, lockdown_level=0):
+def build_class_groups(people):
     classrooms = []
     for kids_age in range(MINIMUM_CLASS_AGE, MAXIMUM_CLASS_AGE+1):
         schoolkids = [p for p in people if p.age == kids_age]
         random.shuffle(schoolkids)
-        classrooms += build_workplaces(schoolkids, classroom_size=30, lockdown_level=lockdown_level)
-    logging.info(f"Only putting children >{MINIMUM_CLASS_AGE} years old into classrooms.")
-    if lockdown_level > 0:
-        logging.info(f"There are {lockdown_level*100}% of classrooms closed due to lockdown, now {len(classrooms)} of "
-                     f"classrooms are open")
+        classrooms += build_workplaces(schoolkids, classroom_size=30)
     return classrooms
 
 
@@ -131,18 +146,15 @@ def next_household_ages(household_list):
     return random.choice(household_list)
 
 
-def build_workplaces(people, classroom_size=-1, lockdown_level=0):
+def build_workplaces(people, classroom_size=-1):
     """
-
     :param people: lets for now let these be a list of N population.covid.PersonCovid() objects
     :param classroom_size: specify number of students in one classroom for each age group
-    :param lockdown_level: specify number of workplaces closed for lockdown
     :return: a list of workplaces, where workplaces are a list of person objects.
     """
     n_individuals = len(people)
     assigned = 0
     workplaces = []
-    remaining_workplaces = []
     while assigned < n_individuals:
         if classroom_size > 0:
             size = 30
@@ -160,12 +172,8 @@ def build_workplaces(people, classroom_size=-1, lockdown_level=0):
 
     if classroom_size == -1:
         logging.info(f"Initially created {len(workplaces)} workplaces")
-    remaining_workplaces = random.sample(workplaces, int(len(workplaces) * (1-lockdown_level)))
-    if lockdown_level > 0:
-        if classroom_size == -1:
-            logging.info(f"After lockdown, there are {len(remaining_workplaces)} workplaces open")
 
-    return remaining_workplaces
+    return workplaces
 
 
 def next_workplace_size():
