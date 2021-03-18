@@ -30,3 +30,28 @@ class Ward:
 
     def __hash__(self):
         return hash(str(self))
+
+class LSOA:
+    """
+    This object will keep all the information about a given LSOA
+    """
+
+    def __init__(self, code, name):
+        """
+        :param code: string for example 'E09000021'
+        :param name: string for example 'Kingston upon Thames'
+        """
+        self.code = code
+        self.name = name
+
+    def __eq__(self, other):
+        return str(self) == str(other)
+
+    def __str__(self):
+        return f"LSOA <{self.name} {self.code}>"
+
+    def __repr__(self):
+        return str(self)
+
+    def __hash__(self):
+        return hash(str(self))
