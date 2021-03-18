@@ -23,8 +23,9 @@ COORDINATES_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinat
 POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv')
 COORDINATES_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_lsoa_list.csv')
 POPULATION_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_lsoa_population.csv')
-WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'Wards_May_2020_Boundaries_UK_BGC.shp')
-LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')
+WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'UK_regions', 'Wards_May_2020_Boundaries_UK_BGC.shp')
+LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'UK_regions',
+                                   'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')
 DEFAULT_DISTRICT_TYPE = 'Ward'
 
 DISTRICT_PARAMETERS = \
@@ -284,11 +285,9 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE):
     gdf_home_list = gpd.GeoDataFrame(df_home_list,
                                      geometry=gpd.points_from_xy(df_home_list['lon'], df_home_list['lat']))
 
-
     # Creating df_home_district_list, same as df_home_list but includes district_name and district_code, by checking
     # each Leeds district polygon to see if it contains the Point defined by the lon/lat of the home.
-    # If no district contains the Point, then the number of outliners added up in number_outliers.
-
+    # If no district contains the Point, then the number of outliers added up in number_outliers.
 
     df_home_district_list = df_home_list.copy()
     new_columns = [['']*2]*len(df_home_district_list.index)
@@ -320,4 +319,3 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE):
     sample_homes_districts_df_nogeo = df_home_district_list.drop("geometry", axis=1)
     sample_homes_districts_df_nogeo.to_csv(DISTRICT_PARAMETERS[district_type]['intermediary_file'], index=False)
     return sample_homes_districts_df_nogeo
-
