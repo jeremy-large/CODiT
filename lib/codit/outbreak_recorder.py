@@ -116,9 +116,9 @@ class WardComponent:
         df = df.iloc[np.flip(order)].T
         return df.set_index('days of epidemic')
 
-    def plot_weekly_positivity(self, days):
+    def plot_weekly_positivity(self, days, title=''):
         df = self.dataframe(self.positive_tests)[:days][7::7]
-        ax = (df * 100000).plot(grid=True, figsize=(12,8), title="Simulation: detected Covid - first six weeks of 2021")
+        ax = (df * 100000).plot(grid=True, figsize=(12,8), title="Weekly positivity rates " + title)
         plt.legend(loc='right',bbox_to_anchor=(1.4, 0.5))
         ax.set_ylabel("Simulated positive tests per 100,000 of population in the previous week")
         _ = ax.axhline(0, color='k')
