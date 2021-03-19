@@ -15,9 +15,9 @@ def coopt_existing_test(track, notes, person):
 
 class LateralFlowUK(UKSociety):
 
-    DAYS_BETWEEN_REPEATED_TESTS = 1
-    VALENCY_TEST_FREQUENCY_DAYS = 3
-    GENERAL_VALENCY_QUANTILE_THRESHOLD = 0.95
+    DAYS_BETWEEN_REPEATED_TESTS = 4
+    VALENCY_TEST_FREQUENCY_DAYS = 4
+    GENERAL_VALENCY_QUANTILE_THRESHOLD = 0.9
     LATERAL_TO_PCR_RATIO = 20
     RETEST_POSITIVE_CASES = True
 
@@ -29,7 +29,7 @@ class LateralFlowUK(UKSociety):
         self.valency_threshold = None
         logging.info(f"The city has {self.LATERAL_TO_PCR_RATIO}x the number of lateral flow tests available, as PCRs")
 
-    def act_on_test(self, test, n_reps_lateral_test=5):
+    def act_on_test(self, test, n_reps_lateral_test=1):
         if test.positive:
             for c in test.person.contacts:
                 if random.random() < self.cfg.PROB_TRACING_GIVEN_CONTACT:
