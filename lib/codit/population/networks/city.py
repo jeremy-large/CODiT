@@ -10,7 +10,7 @@ from codit.population.networks.city_config.typical_households import build_chara
 from codit.population.networks.home_locations import Home, get_home_samples
 
 EPHEMERAL_CONTACT = 0.1  # people per day
-
+WITHIN_BUILDING_CONTACT = 0.75
 
 class CityPopulation(FixedNetworkPopulation):
 
@@ -33,9 +33,9 @@ class CityPopulation(FixedNetworkPopulation):
 
         building_cliques = []
         for b in self.buildings:
-            building_cliques.extend(FixedNetworkPopulation.fix_cliques(self, EPHEMERAL_CONTACT, people=b))
+            building_cliques.extend(FixedNetworkPopulation.fix_cliques(self, WITHIN_BUILDING_CONTACT, people=b))
         logging.info(f"Adding {len(building_cliques)} contacts each within one of the {len(self.buildings)} buildings "
-                     f"(contact density of {EPHEMERAL_CONTACT})")
+                     f"(contact density of {WITHIN_BUILDING_CONTACT})")
 
         return static_cliques + dynamic_cliques + building_cliques
 
@@ -64,7 +64,7 @@ def build_city_structures(people):
     report_size(households, 'households')
 
     buildings = build_buildings(people)
-    report_size(households, 'buildings')
+    report_size(buildings, 'buildings')
 
     classrooms = build_class_groups(people)
 
@@ -130,7 +130,7 @@ def build_households(people):
     household_examples = build_characteristic_households(num_h)
     # create num_h of homes
     homes_examples = get_home_samples(num_h)
-    logging.info(f"There are {len(homes_examples)} households generated for accommodation buildings")
+    logging.debug(f"There are {len(homes_examples)} households generated for accommodation buildings")
 
     while assigned < n_individuals:
         ages = next_household_ages(household_examples)
