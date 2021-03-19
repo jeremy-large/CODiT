@@ -19,11 +19,12 @@ def main():
     parser.add_argument("population_xls", nargs="?", type=Path, default=POPULATION_XLS, help="Path to population excel file")
     parser.add_argument("deprivation_csv", nargs="?", type=Path, default=DEPRIVATION_CSV, help="Path to deprivation csv file")
     parser.add_argument("output_csv", nargs="?", type=Path, default=OUTPUT_CSV, help="Path to population excel file")
+    parser.add_argument("--sheet_name", default="Mid-2019 Persons", help="Sheet name for population xls file")
     parser.add_argument("-r", "--region", help="Optional filter for region (eg 'Leeds')")
     args = parser.parse_args()
 
     # Read CSV file and rename population column
-    data = pd.read_excel(args.population_xls, "Mid-2019 Persons", index_col=0, usecols="A,B,G", skiprows=4)
+    data = pd.read_excel(args.population_xls, args.sheet_name, index_col=0, usecols="A,B,G", skiprows=4)
     data.rename(columns={"All Ages": "Total Population"}, inplace=True)
 
     # Filter by region if specified
@@ -34,7 +35,7 @@ def main():
     with open(args.deprivation_csv) as fh:
         dep = pd.read_csv(fh, index_col=0)
 
-    # Join each deprivation index as a new column for each lsoa
+    # Join each deprivation index as a new column
     for dep_idx in dep["Indices of Deprivation"].unique():
         for measure in dep["Measurement"].unique():
             data = data.join(dep.loc[(dep['Indices of Deprivation'] == dep_idx) & (dep['Measurement'] == measure)]["Value"])
