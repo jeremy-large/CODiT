@@ -34,7 +34,7 @@ class Outbreak:
         """
         if population:
             assert pop_size in (0, len(population.people)), "provide a population of the correct size"
-            logging.warning("Using a pre-existing population - does it have the right network structure?")
+            logging.debug("Using a pre-existing population")
             if person_type is not None:
                 assert {person_type} == set(type(p) for p in population.people), \
                     "The people in this population are of the wrong type"
