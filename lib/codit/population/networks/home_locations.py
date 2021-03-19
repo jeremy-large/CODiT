@@ -4,7 +4,7 @@ An spatial attribute for each household
 
 import pandas as pd
 import os
-import csv
+import smart_open
 import numpy as np
 import random
 from codit import share_dir
@@ -22,7 +22,7 @@ FULL_HOME_LIST_CSV = os.path.join(DATA_PATH, 'city', 'population', 'full_home_li
 COORDINATES_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_wards_list.csv')
 POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv')
 COORDINATES_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_lsoa_list.csv')
-POPULATION_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_lsoa_population.csv')
+POPULATION_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_lsoa_population.csv.gz')
 WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'Wards_May_2020_Boundaries_UK_BGC.shp')
 LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')
 DEFAULT_DISTRICT_TYPE = 'Ward'
@@ -278,7 +278,9 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE):
     districts_shapes_gdf = districts_shapes_gdf_full[district_paras[district_type]['shape_file_columns']].copy()
 
     # #### Obtain list of districts names
-    sample_districts_names_df = pd.read_csv(district_paras[district_type]['population_data_file'])
+    fn = district_paras[district_type]['population_data_file']
+    with smart_open.open(fn) as fh:
+        sample_districts_names_df = pd.read_csv(fh)
 
     # #### Pare down districts shapes dataframe into only the relevant districts (ones in Samples)
     sample_districts_shapes_gdf = districts_shapes_gdf.loc[districts_shapes_gdf[district_paras[district_type]
