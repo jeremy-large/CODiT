@@ -1,6 +1,33 @@
+import pandas as pd
+import smart_open
+
+from codit.config import POPULATION_LSOA_CSV
 
 
-class Ward:
+class Place:
+    """
+    Defined by its name
+    """
+    def __eq__(self, other):
+        return str(self) == str(other)
+
+    def __repr__(self):
+        return str(self)
+
+    def __hash__(self):
+        return hash(str(self))
+
+
+class Building(Place):
+    def __init__(self, lon, lat):
+        self.lat = lat
+        self.lon = lon
+
+    def __str__(self):
+        return f"Building at <Lon {self.lon}   Lat {self.lat}>"
+
+
+class Ward(Place):
     """
     This object will keep all the information about a given ward
     """
@@ -19,22 +46,17 @@ class Ward:
         self.code = code
         self.name = name
 
-    def __eq__(self, other):
-        return str(self) == str(other)
-
     def __str__(self):
         return f"Ward <{self.name} {self.code}>"
 
-    def __repr__(self):
-        return str(self)
 
-    def __hash__(self):
-        return hash(str(self))
-
-class LSOA:
+class LSOA(Place):
     """
     This object will keep all the information about a given LSOA
     """
+    with smart_open.open(POPULATION_LSOA_CSV) as fh:
+        LSOAs = pd.read_csv(fh)
+    LSOAs.set_index('LSOA Code', inplace=True)
 
     def __init__(self, code, name):
         """
@@ -43,15 +65,7 @@ class LSOA:
         """
         self.code = code
         self.name = name
-
-    def __eq__(self, other):
-        return str(self) == str(other)
+        self.features = self.LSOAs.loc[self.code].to_dict()
 
     def __str__(self):
         return f"LSOA <{self.name} {self.code}>"
-
-    def __repr__(self):
-        return str(self)
-
-    def __hash__(self):
-        return hash(str(self))

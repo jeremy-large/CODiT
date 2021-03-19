@@ -1,3 +1,10 @@
+import os
+
+from codit import share_dir
+
+DATA_PATH = os.path.join(share_dir(), 'codit', 'data')
+POPULATION_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_lsoa_population.csv.gz')
+
 
 class CFG:
 
