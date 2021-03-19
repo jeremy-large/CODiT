@@ -7,14 +7,13 @@ import os
 import smart_open
 import numpy as np
 import random
-from codit import share_dir
-from codit.population.networks.regions import Ward, LSOA
+from codit.config import DATA_PATH, POPULATION_LSOA_CSV
+from codit.population.networks.regions import Ward, LSOA, Building
 from codit.population.networks.city_config.city_cfg import AVERAGE_HOUSEHOLD_SIZE
 import logging
 import geopandas as gpd
 import time
 
-DATA_PATH = os.path.join(share_dir(), 'codit', 'data')
 COORDINATES_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates.csv')
 TYPES_CONSTRAINTS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'types_households_constraints.csv')
 FULL_HOME_LIST_CSV = os.path.join(DATA_PATH, 'city', 'population', 'full_home_list.csv')
@@ -22,7 +21,6 @@ FULL_HOME_LIST_CSV = os.path.join(DATA_PATH, 'city', 'population', 'full_home_li
 COORDINATES_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_wards_list.csv')
 POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv')
 COORDINATES_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_lsoa_list.csv')
-POPULATION_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_lsoa_population.csv.gz')
 WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'Wards_May_2020_Boundaries_UK_BGC.shp')
 LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')
 DEFAULT_DISTRICT_TYPE = 'Ward'
@@ -77,8 +75,8 @@ multiple_households_building_types = [
 
 class Home:
     def __init__(self, lon=None, lat=None, accommodation_type='', ward_code='', ward_name='', lsoa_code='', lsoa_name=''):
-        self.coordinate = {'lon': lon, 'lat': lat}
         self.type = accommodation_type
+        self.building = Building(lon, lat)
         self.ward = Ward(ward_code, ward_name)
         self.lsoa = LSOA(lsoa_code, lsoa_name)
 
