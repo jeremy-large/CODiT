@@ -4,10 +4,11 @@
 A script to join some raw population and Deprivation stats together for each lsoa.
 """
 
-import argparse
+import sys, argparse
 from pathlib import Path
-from smart_open import open
+import smart_open
 from codit import share_dir
+import numpy as np
 import pandas as pd
 
 POPULATION_XLS = share_dir() / "codit" / "data" / "UK_regions" / "SAPE22DT13-mid-2019-lsoa-Broad_ages-estimates-unformatted.xlsx"
@@ -18,35 +19,81 @@ DEPRIVATION_CSV = share_dir() / "codit" / "data" / "UK_regions" / "imd2019lsoa.c
 
 OUTPUT_CSV = share_dir() / "codit" / "data" / "city" / "population" / "sample_lsoa_population.csv.gz"
 
+DEPRIVATION_COLUMNS = {
+    ("a. Index of Multiple Deprivation (IMD)", "Rank"):                           "IMD_Rank",
+    ("a. Index of Multiple Deprivation (IMD)", "Decile"):                         "IMD_Decile",
+    ("a. Index of Multiple Deprivation (IMD)", "Score"):                          "IMD_Score",
+    ("b. Income Deprivation Domain", "Rank"):                                     "Income_Rank",
+    ("b. Income Deprivation Domain", "Decile"):                                   "Income_Decile",
+    ("b. Income Deprivation Domain", "Score"):                                    "Income_Score",
+    ("c. Employment Deprivation Domain", "Rank"):                                 "Employment_Rank",
+    ("c. Employment Deprivation Domain", "Decile"):                               "Employment_Decile",
+    ("c. Employment Deprivation Domain", "Score"):                                "Employment_Score",
+    ("d. Education, Skills and Training Domain", "Rank"):                         "Education_Rank",
+    ("d. Education, Skills and Training Domain", "Decile"):                       "Education_Decile",
+    ("d. Education, Skills and Training Domain", "Score"):                        "Education_Score",
+    ("e. Health Deprivation and Disability Domain", "Rank"):                      "Health_Rank",
+    ("e. Health Deprivation and Disability Domain", "Decile"):                    "Health_Decile",
+    ("e. Health Deprivation and Disability Domain", "Score"):                     "Health_Score",
+    ("f. Crime Domain", "Rank"):                                                  "Crime_Rank",
+    ("f. Crime Domain", "Decile"):                                                "Crime_Decile",
+    ("f. Crime Domain", "Score"):                                                 "Crime_Score",
+    ("g. Barriers to Housing and Services Domain", "Rank"):                       "Housing_Rank",
+    ("g. Barriers to Housing and Services Domain", "Decile"):                     "Housing_Decile",
+    ("g. Barriers to Housing and Services Domain", "Score"):                      "Housing_Score",
+    ("h. Living Environment Deprivation Domain", "Rank"):                         "LivingEnv_Rank",
+    ("h. Living Environment Deprivation Domain", "Decile"):                       "LivingEnv_Decile",
+    ("h. Living Environment Deprivation Domain", "Score"):                        "LivingEnv_Score",
+    ("i. Income Deprivation Affecting Children Index (IDACI)", "Rank"):           "IDACI_Rank",
+    ("i. Income Deprivation Affecting Children Index (IDACI)", "Decile"):         "IDACI_Decile",
+    ("i. Income Deprivation Affecting Children Index (IDACI)", "Score"):          "IDACI_Score",
+    ("j. Income Deprivation Affecting Older People Index (IDAOPI)", "Rank"):      "IDAOPI_Rank",
+    ("j. Income Deprivation Affecting Older People Index (IDAOPI)", "Decile"):    "IDAOPI_Decile",
+    ("j. Income Deprivation Affecting Older People Index (IDAOPI)", "Score"):     "IDAOPI_Score",
+}
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("population_xls", nargs="?", type=Path, default=POPULATION_XLS, help="Path to population excel file")
     parser.add_argument("deprivation_csv", nargs="?", type=Path, default=DEPRIVATION_CSV, help="Path to deprivation csv file")
     parser.add_argument("output_csv", nargs="?", type=Path, default=OUTPUT_CSV, help="Path to population excel file")
     parser.add_argument("--sheet_name", default="Mid-2019 Persons", help="Sheet name for population xls file")
-    parser.add_argument("-r", "--region", help="Optional filter for region (eg 'Leeds')")
+    parser.add_argument("-r", "--regions", nargs='+', help="Optional filter for regions to include (eg 'Leeds')")
     args = parser.parse_args()
 
-    # Read CSV file and rename population column
-    data = pd.read_excel(args.population_xls, args.sheet_name, index_col=0, usecols="A,B,G", skiprows=4)
-    data.rename(columns={"All Ages": "Total Population"}, inplace=True)
+    # Prevent national data overwriting the default region path
+    if not args.regions and args.output_csv == OUTPUT_CSV:
+        print("Please specify some regions when overwriting the default output_csv file", file=sys.stderr)
+        parser.print_help()
+        sys.exit(2)
 
-    # Filter by region if specified
-    if args.region:
-        data = data[data["LSOA Name"].str.startswith(args.region)]
+    # Read CSV file and rename columns to match home_locations.py
+    data = pd.read_excel(args.population_xls, args.sheet_name, index_col=0, usecols="A,B,G", skiprows=4)
+    data.rename(columns={"LSOA Code": "lsoa11cd",
+                         "LSOA Name": "lsoa11nm",
+                         "All Ages": "population"}, inplace=True)
+
+    # Filter out regions if specified
+    if args.regions:
+        mask = np.zeros(data.shape[0], dtype=np.bool_)
+        for region in args.regions:
+            mask |= data["lsoa11nm"].str.startswith(region)
+        data = data[mask]
 
     # Load the deprivation_csv file
-    with open(args.deprivation_csv) as fh:
+    with smart_open.open(args.deprivation_csv) as fh:
         dep = pd.read_csv(fh, index_col=0)
 
     # Join each deprivation index as a new column
-    for dep_idx in dep["Indices of Deprivation"].unique():
+    for dep_idx in sorted(dep["Indices of Deprivation"].unique()):
         for measure in dep["Measurement"].unique():
-            data = data.join(dep.loc[(dep['Indices of Deprivation'] == dep_idx) & (dep['Measurement'] == measure)]["Value"])
-            data.rename(columns={"Value": f"{dep_idx}:{measure}"}, inplace=True)
+            where = (dep['Indices of Deprivation'] == dep_idx) & (dep['Measurement'] == measure)
+            data = data.join(dep.loc[where]["Value"])
+            column_name = DEPRIVATION_COLUMNS[(dep_idx.strip(), measure.strip())]
+            data.rename(columns={"Value": column_name}, inplace=True)
 
     # Write output csv file
-    with open(args.output_csv, "wb") as fh:
+    with smart_open.open(args.output_csv, "wb") as fh:
         data.to_csv(fh)
 
 if __name__ == "__main__":
