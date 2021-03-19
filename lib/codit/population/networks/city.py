@@ -91,12 +91,12 @@ def report_size(care_homes, ch):
     logging.info(f"{len(care_homes)} {ch} of mean size {np.mean([len(x) for x in care_homes]):2.2f}")
 
 
-def build_class_groups(people):
+def build_class_groups(people, class_size=30):
     classrooms = []
     for kids_age in range(MINIMUM_CLASS_AGE, MAXIMUM_CLASS_AGE+1):
         schoolkids = [p for p in people if p.age == kids_age]
         random.shuffle(schoolkids)
-        classrooms += build_workplaces(schoolkids, classroom_size=30)
+        classrooms += build_workplaces(schoolkids, force_size=class_size)
     return classrooms
 
 
@@ -146,20 +146,18 @@ def next_household_ages(household_list):
     return random.choice(household_list)
 
 
-def build_workplaces(people, classroom_size=-1):
+def build_workplaces(people, force_size=None):
     """
     :param people: lets for now let these be a list of N population.covid.PersonCovid() objects
-    :param classroom_size: specify number of students in one classroom for each age group
+    :param force_size: specify number of participants
     :return: a list of workplaces, where workplaces are a list of person objects.
     """
     n_individuals = len(people)
     assigned = 0
     workplaces = []
     while assigned < n_individuals:
-        if classroom_size > 0:
-            size = 30
-        else:
-            size = next_workplace_size()
+
+        size = force_size or next_workplace_size()
 
         if assigned + size >= n_individuals:
             size = n_individuals - assigned
@@ -169,9 +167,6 @@ def build_workplaces(people, classroom_size=-1):
         hh = people[assigned: assigned + size]
         workplaces.append(set(hh))
         assigned += size
-
-    if classroom_size == -1:
-        logging.info(f"Initially created {len(workplaces)} workplaces")
 
     return workplaces
 
