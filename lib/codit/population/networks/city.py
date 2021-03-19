@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import logging
+from collections import defaultdict
 
 from codit.population.population import FixedNetworkPopulation, Population
 from codit.population.networks import household_workplace
@@ -9,13 +10,13 @@ from codit.population.networks.city_config.typical_households import build_chara
 from codit.population.networks.home_locations import Home, get_home_samples
 
 EPHEMERAL_CONTACT = 0.1  # people per day
-
+WITHIN_BUILDING_CONTACT = 0.75
 
 class CityPopulation(FixedNetworkPopulation):
 
     def __init__(self, n_people, society, person_type=None, lockdown_config=None):
         Population.__init__(self, n_people, society, person_type=person_type)
-        self.households, self.workplaces, self.classrooms, self.care_homes = build_city_structures(self.people)
+        self.households, self.workplaces, self.classrooms, self.care_homes, self.buildings = build_city_structures(self.people)
         self.set_structure(society, lockdown_config=lockdown_config)
 
     def fix_cliques(self, encounter_size, group_size=None, lockdown_config=None):
@@ -29,7 +30,14 @@ class CityPopulation(FixedNetworkPopulation):
         logging.info(f"Adding {len(static_cliques)} permanent contact groups")
         dynamic_cliques = FixedNetworkPopulation.fix_cliques(self, EPHEMERAL_CONTACT)
         logging.info(f"Adding {len(dynamic_cliques)} ephemeral contact pairs")
-        return static_cliques + dynamic_cliques
+
+        building_cliques = []
+        for b in self.buildings:
+            building_cliques.extend(FixedNetworkPopulation.fix_cliques(self, WITHIN_BUILDING_CONTACT, people=b))
+        logging.info(f"Adding {len(building_cliques)} contacts each within one of the {len(self.buildings)} buildings "
+                     f"(contact density of {WITHIN_BUILDING_CONTACT})")
+
+        return static_cliques + dynamic_cliques + building_cliques
 
     def build_city_cliques(self, lockdown_config):
 
@@ -55,6 +63,9 @@ def build_city_structures(people):
     households = build_households(people)
     report_size(households, 'households')
 
+    buildings = build_buildings(people)
+    report_size(buildings, 'buildings')
+
     classrooms = build_class_groups(people)
 
     working_age_people = [p for p in people if MINIMUM_WORKING_AGE < p.age < MAXIMUM_WORKING_AGE]
@@ -70,7 +81,7 @@ def build_city_structures(people):
     workplaces = build_workplaces(working_age_people)
     report_size(workplaces, 'workplaces')
 
-    return households, workplaces, classrooms, care_homes
+    return households, workplaces, classrooms, care_homes, buildings
 
 
 def is_care_home(home):
@@ -100,6 +111,13 @@ def build_class_groups(people, class_size=30):
     return classrooms
 
 
+def build_buildings(people):
+    bdngs = defaultdict(list)
+    for p in people:
+        bdngs[p.home.building].append(p)
+    return list(bdngs.values())
+
+
 def build_households(people):
     """
     :param people: a list of population.covid.PersonCovid() objects
@@ -112,7 +130,7 @@ def build_households(people):
     household_examples = build_characteristic_households(num_h)
     # create num_h of homes
     homes_examples = get_home_samples(num_h)
-    logging.info(f"There are {len(homes_examples)} households generated for accommodation buildings")
+    logging.debug(f"There are {len(homes_examples)} households generated for accommodation buildings")
 
     while assigned < n_individuals:
         ages = next_household_ages(household_examples)

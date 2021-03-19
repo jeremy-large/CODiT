@@ -96,9 +96,11 @@ class FixedNetworkPopulation(Population):
             p.contacts = tuple(d[p] - {p})
         return {p: p.contacts for p in self.people}
 
-    def fix_cliques(self, mean_num_contacts, group_size=2):
-        n_groups = int((len(self.people) + 1) * mean_num_contacts / group_size)
-        ii_jj = [random.choices(self.people, k=n_groups) for _ in range(group_size)]
+    def fix_cliques(self, mean_num_contacts, group_size=2, people=None):
+        people = people or self.people
+        # TODO: the int below rounds *down*
+        n_groups = int((len(people) + 1) * mean_num_contacts / group_size)
+        ii_jj = [random.choices(people, k=n_groups) for _ in range(group_size)]
         return [set(g) for g in zip(*ii_jj) if len(set(g)) == group_size]
 
     def form_groupings(self, group_size):
