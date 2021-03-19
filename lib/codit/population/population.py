@@ -7,10 +7,9 @@ import numpy as np
 
 
 class Population:
-    def __init__(self, n_people, society, person_type=None, lockdown_level=0):
+    def __init__(self, n_people, society, person_type=None):
         person_type = person_type or Person
         self.people = [person_type(society, config=society.cfg.__dict__, name=f"person {i}") for i in range(n_people)]
-        self.lockdown_level = lockdown_level
 
     def reset_people(self, society):
         for person in self.people:
@@ -80,9 +79,12 @@ class Population:
 
 
 class FixedNetworkPopulation(Population):
-    def __init__(self, n_people, society, person_type=None, lockdown_level=0):
-        Population.__init__(self, n_people, society, person_type=person_type, lockdown_level=lockdown_level)
-        self.fixed_cliques = self.fix_cliques(society.encounter_size)
+    def __init__(self, n_people, society, person_type=None):
+        Population.__init__(self, n_people, society, person_type=person_type)
+        self.set_structure(society)
+
+    def set_structure(self, society, **kwargs):
+        self.fixed_cliques = self.fix_cliques(society.encounter_size, **kwargs)
         self.contacts = self.find_contacts()
 
     def find_contacts(self):

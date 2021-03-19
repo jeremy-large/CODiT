@@ -17,7 +17,9 @@ requirements:
     - numpy
     - pandas
     - scikit-learn
-    - xlrd
+    - xlrd      # excel xls files in pandas
+    - openpyxl  # excel xlsx files in pandas
+    - smart_open
     - matplotlib
     - notebook
     - jupyterlab

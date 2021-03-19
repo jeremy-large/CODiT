@@ -10,11 +10,14 @@ class Outbreak:
                  population=None,
                  population_type=None,
                  person_type=None,
-                 show_heatmap=False):
+                 show_heatmap=False,
+                 reset_population=True):
 
-        self.pop = self.prepare_population(pop_size, population, population_type, society, person_type)
-        society.clear_queues()
-        self.pop.seed_infections(seed_size, diseases)
+        self.pop = self.prepare_population(pop_size, population, population_type, society, person_type,
+                                           reset=reset_population)
+        if reset_population:
+            society.clear_queues()
+            self.pop.seed_infections(seed_size, diseases)
 
         self.initialize_timers(n_days, society.episodes_per_day)
         self.group_size = society.encounter_size
@@ -24,15 +27,19 @@ class Outbreak:
         # Add a switch of heatmap video
         self.set_recorder(show_heatmap=show_heatmap)
 
-
-    def prepare_population(self, pop_size, population, population_type, society, person_type):
+    def prepare_population(self, pop_size, population, population_type, society, person_type, reset=True):
+        """
+        :param reset: if set to False, then a population is passed in without being reset
+        :return:
+        """
         if population:
             assert pop_size in (0, len(population.people)), "provide a population of the correct size"
-            logging.warning("Using a pre-existing population - does it have the right network structure?")
+            logging.debug("Using a pre-existing population")
             if person_type is not None:
                 assert {person_type} == set(type(p) for p in population.people), \
                     "The people in this population are of the wrong type"
-            population.reset_people(society)
+            if reset:
+                population.reset_people(society)
             self.pop = population
             return population
 
