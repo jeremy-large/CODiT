@@ -182,7 +182,7 @@ def allocate_homes_to_district(total_h, coords_per_district):
     return list_households_info
 
 
-def build_households_home_list(district_type=DEFAULT_DISTRICT_TYPE):
+def build_households_home_list(test=False):
     """
     :param district_type:  district type, 'Ward' or 'LSOA' for now
     Build a full list of households: ['lon', 'lat', 'building_type'] with 'district_code', 'district_name'
@@ -191,6 +191,9 @@ def build_households_home_list(district_type=DEFAULT_DISTRICT_TYPE):
     coords_types = []
     df_coordinates_ward = pd.read_csv(district_paras['Ward']['intermediary_file'])
     df_coordinates_lsoa = pd.read_csv(district_paras['LSOA']['intermediary_file'])
+    if test:
+        df_coordinates_ward = df_coordinates_ward[::100]
+        df_coordinates_lsoa = df_coordinates_lsoa[::100]
     df_coordinates = pd.merge(df_coordinates_ward, df_coordinates_lsoa, on=['lon', 'lat', 'building_type'])
     additional_columns = []
     additional_columns += district_paras['Ward']['output_additional_columns']
@@ -210,7 +213,8 @@ def build_households_home_list(district_type=DEFAULT_DISTRICT_TYPE):
         list_households_info += allocate_homes_to_district(pop_district[2] / AVERAGE_HOUSEHOLD_SIZE, tmp_coords_district)
 
     df_home_list = pd.DataFrame(list_households_info, columns=df_coordinates.columns)
-    df_home_list.to_csv(FULL_HOME_LIST_CSV, index=False)
+    if not test:
+        df_home_list.to_csv(FULL_HOME_LIST_CSV, index=False)
     return df_home_list
 
 
@@ -262,7 +266,7 @@ def generate_average_number_homes_for_building_type(total_h, coords_types):
     return df_types_constraints_households
 
 
-def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE):
+def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE, test=False):
     """
     Allocate coordinates to geographic districts by examine the shapefile of that district
     :param district_type:  district type, 'Ward' or 'LSOA' for now
@@ -271,6 +275,8 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE):
 
     # Obtain coordinates.csv
     df_home_list = pd.read_csv(COORDINATES_CSV)
+    if test:
+        df_home_list = df_home_list.loc[::100].reset_index()
     # Obtain geodataframe from shapefile of all districts
     districts_shapes_gdf_full = gpd.read_file(district_paras[district_type]['shape_file'])
     districts_shapes_gdf = districts_shapes_gdf_full[district_paras[district_type]['shape_file_columns']].copy()
@@ -279,6 +285,9 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE):
     fn = district_paras[district_type]['population_data_file']
     with smart_open.open(fn) as fh:
         sample_districts_names_df = pd.read_csv(fh)
+        sample_districts_names_df.rename(columns={"LSOA Code": "lsoa11cd", "LSOA Name": "lsoa11nm"}, inplace=True)
+        if test:
+            sample_districts_names_df = sample_districts_names_df.loc[::5]
 
     # #### Pare down districts shapes dataframe into only the relevant districts (ones in Samples)
     sample_districts_shapes_gdf = districts_shapes_gdf.loc[districts_shapes_gdf[district_paras[district_type]
@@ -322,6 +331,7 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE):
 
     # Save dataframe with homes and district info to csv file
     sample_homes_districts_df_nogeo = df_home_district_list.drop("geometry", axis=1)
-    sample_homes_districts_df_nogeo.to_csv(district_paras[district_type]['intermediary_file'], index=False)
+    if not test:
+        sample_homes_districts_df_nogeo.to_csv(district_paras[district_type]['intermediary_file'], index=False)
     return sample_homes_districts_df_nogeo
 
