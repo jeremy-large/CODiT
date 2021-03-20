@@ -25,7 +25,7 @@ WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'Wards_May_
 LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')
 DEFAULT_DISTRICT_TYPE = 'Ward'
 
-district_paras = \
+DISTRICT_PARAMETERS = \
     {
         'Ward':
         {
@@ -87,10 +87,8 @@ def get_population_district(district_type = DEFAULT_DISTRICT_TYPE):
     :param district_type: district type, 'Ward' or 'LSOA' for now
     :return: return list of [str(pop_ward['ward_code']), str(pop_ward['ward_name']), int(pop_ward['population'])]
     """
-    population_district = []
-    df_population_district = pd.read_csv(district_paras[district_type]['population_data_file'])
-    population_district = df_population_district.values.tolist()
-    return population_district
+    df_population_district = pd.read_csv(DISTRICT_PARAMETERS[district_type]['population_data_file'])
+    return df_population_district.to_dict('records')
 
 
 def count_coords_for_types(coords):
@@ -110,7 +108,7 @@ def count_coords_for_types(coords):
     for building_type in building_types:
         count = 0
         for coord in coords:
-            if coord[2] == building_type:
+            if coord['building_type'] == building_type:
                 count += 1
         types_counts += [(building_type, count)]
     return types_counts
@@ -129,12 +127,12 @@ def merge_building_types_constraints_to_accommodations(types_count_list, types_c
     return pd.merge(df_types_count, df_types_constraints, on="building_type", how="inner")
 
 
-def allocate_households_to_each_building(list_types_average_households, list_coords):
+def allocate_households_to_each_building(df_types_average_households, list_coords):
     """
     Use Poisson distribution to randomly allocate specified number of households to each accommodation building, as Poisson
     distribution is discreet non-negative integers, here we use the return from (Possion() + Min number of households
     for that type of accommodation building) as the number of households for each accommodation building
-    :param list_types_average_households: list of ['building_type', 'number of buildings for each building type',\
+    :param df_types_average_households: df of ['building_type', 'number of buildings for each building type',\
     ('average_num_households of that building type'-'min_households of that building type'), 'min_households of that
     building type']
     :param list_coords: list of coordinates of all accommodation buildings ['lon', 'lat', 'building_type', 'ward_code',
@@ -143,18 +141,17 @@ def allocate_households_to_each_building(list_types_average_households, list_coo
     'num_of_households']
     """
 
-    df_coords_types = pd.DataFrame(list_coords, columns=['lon', 'lat', 'building_type', 'ward_code', 'ward_name',
-                                                         'lsoa_code', 'lsoa_name'])
+    homes = pd.DataFrame(list_coords)
     df_result = pd.DataFrame()
-    for types_average_households in list_types_average_households:
-        if types_average_households[1] > 0:
-            list_num_households_per_type = list(types_average_households[3] + np.random.poisson(
-                types_average_households[2], size=types_average_households[1]))
-            df_temp = pd.DataFrame(df_coords_types[df_coords_types['building_type'] == types_average_households[0]])
+    for _, hh_types in df_types_average_households.iterrows():
+        if hh_types['number'] > 0:
+            list_num_households_per_type = hh_types['min_households'] + \
+                                           np.random.poisson(hh_types['mean_minus_min'], size=hh_types['number'])
+            df_temp = homes[homes['building_type'] == hh_types['building_type']]
             df_temp['num_of_households'] = list_num_households_per_type
             df_result = pd.concat([df_result, df_temp])
 
-    return df_result.values.tolist()
+    return df_result.to_dict('records')
 
 
 def allocate_homes_to_district(total_h, coords_per_district):
@@ -166,19 +163,15 @@ def allocate_homes_to_district(total_h, coords_per_district):
     """
     logging.info(
         f"number of household in this district is {total_h}, number of coordinates in this district is {len(coords_per_district)}")
-    df_types_constraints_households = generate_average_number_homes_for_building_type(total_h, coords_per_district)
-    list_types_average_households = list(
-        zip(df_types_constraints_households['building_type'], df_types_constraints_households['number'],
-            df_types_constraints_households['average_num_households'] - df_types_constraints_households[
-                'min_households'],
-            df_types_constraints_households['min_households']))
-    list_num_households_per_building = allocate_households_to_each_building(list_types_average_households,
-                                                                            coords_per_district)
+    df = generate_average_number_homes_for_building_type(total_h, coords_per_district)
+    df['mean_minus_min'] = df['average_num_households'] - df['min_households']
+    list_num_households_per_building = allocate_households_to_each_building(df, coords_per_district)
 
     list_households_info = []
     for num_households_per_building in list_num_households_per_building:
-        if int(num_households_per_building[-1]) > 0:
-            list_households_info += [num_households_per_building[:-1]] * int(num_households_per_building[-1])
+        if int(num_households_per_building['num_of_households']) > 0:
+            n_hh = num_households_per_building.pop('num_of_households')
+            list_households_info += [num_households_per_building] * int(n_hh)
     return list_households_info
 
 
@@ -188,31 +181,34 @@ def build_households_home_list(test=False):
     Build a full list of households: ['lon', 'lat', 'building_type'] with 'district_code', 'district_name'
     :return: a full list of ['lon', 'lat', 'building_type', 'district_code', 'district_name']
     """
-    coords_types = []
-    df_coordinates_ward = pd.read_csv(district_paras['Ward']['intermediary_file'])
-    df_coordinates_lsoa = pd.read_csv(district_paras['LSOA']['intermediary_file'])
+    df_coordinates_ward = pd.read_csv(DISTRICT_PARAMETERS['Ward']['intermediary_file'])
+    df_coordinates_lsoa = pd.read_csv(DISTRICT_PARAMETERS['LSOA']['intermediary_file'])
     if test:
         df_coordinates_ward = df_coordinates_ward[::100]
         df_coordinates_lsoa = df_coordinates_lsoa[::100]
     df_coordinates = pd.merge(df_coordinates_ward, df_coordinates_lsoa, on=['lon', 'lat', 'building_type'])
     additional_columns = []
-    additional_columns += district_paras['Ward']['output_additional_columns']
-    additional_columns += district_paras['LSOA']['output_additional_columns']
+    additional_columns += DISTRICT_PARAMETERS['Ward']['output_additional_columns']
+    additional_columns += DISTRICT_PARAMETERS['LSOA']['output_additional_columns']
     df_coordinates.loc[:, additional_columns] = df_coordinates.loc[:, additional_columns].replace('', np.nan)
     # Given coordinates outliers only 4-6 for either Wards or LSOA allocations,
-    # remove coordinates without either Wards or LSOAs
+    # remove coordinates without either Wards or LSOAs:
     df_coordinates.dropna(inplace=True)
-    coords_types = df_coordinates.values.tolist()
+    coords_types = df_coordinates.to_dict('records')
     population_district = get_population_district('Ward')
     list_households_info = []
     for pop_district in population_district:
         tmp_coords_district = []
         for coord_type in coords_types:
-            if coord_type[3] == pop_district[0]:
-                tmp_coords_district += [[*coord_type]]
-        list_households_info += allocate_homes_to_district(pop_district[2] / AVERAGE_HOUSEHOLD_SIZE, tmp_coords_district)
+            if coord_type.get('allocated', False):
+                continue
+            if coord_type['ward_code'] == pop_district['wd20cd']:
+                tmp_coords_district.append(coord_type)
+                coord_type['allocated'] = True
+        list_households_info += allocate_homes_to_district(pop_district['population'] / AVERAGE_HOUSEHOLD_SIZE,
+                                                           tmp_coords_district)
 
-    df_home_list = pd.DataFrame(list_households_info, columns=df_coordinates.columns)
+    df_home_list = pd.DataFrame(list_households_info)[df_coordinates.columns]
     if not test:
         df_home_list.to_csv(FULL_HOME_LIST_CSV, index=False)
     return df_home_list
@@ -278,39 +274,35 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE, test=
     if test:
         df_home_list = df_home_list.loc[::100].reset_index()
     # Obtain geodataframe from shapefile of all districts
-    districts_shapes_gdf_full = gpd.read_file(district_paras[district_type]['shape_file'])
-    districts_shapes_gdf = districts_shapes_gdf_full[district_paras[district_type]['shape_file_columns']].copy()
+    districts_shapes_gdf_full = gpd.read_file(DISTRICT_PARAMETERS[district_type]['shape_file'])
+    districts_shapes_gdf = districts_shapes_gdf_full[DISTRICT_PARAMETERS[district_type]['shape_file_columns']].copy()
 
     # #### Obtain list of districts names
-    fn = district_paras[district_type]['population_data_file']
+    fn = DISTRICT_PARAMETERS[district_type]['population_data_file']
     with smart_open.open(fn) as fh:
         sample_districts_names_df = pd.read_csv(fh)
-        sample_districts_names_df.rename(columns={"LSOA Code": "lsoa11cd", "LSOA Name": "lsoa11nm"}, inplace=True)
         if test:
             sample_districts_names_df = sample_districts_names_df.loc[::5]
 
     # #### Pare down districts shapes dataframe into only the relevant districts (ones in Samples)
-    sample_districts_shapes_gdf = districts_shapes_gdf.loc[districts_shapes_gdf[district_paras[district_type]
-    ['join_column']].isin(list(sample_districts_names_df[district_paras[district_type]['join_column']]))]
+    sample_districts_shapes_gdf = districts_shapes_gdf.loc[districts_shapes_gdf[DISTRICT_PARAMETERS[district_type]
+    ['join_column']].isin(list(sample_districts_names_df[DISTRICT_PARAMETERS[district_type]['join_column']]))]
 
     # Create geodataframe, same as df_home_list but with a geometry column containing Point objects made from lon/lat
     gdf_home_list = gpd.GeoDataFrame(df_home_list,
                                      geometry=gpd.points_from_xy(df_home_list['lon'], df_home_list['lat']))
 
-
     # Creating df_home_district_list, same as df_home_list but includes district_name and district_code, by checking
     # each Leeds district polygon to see if it contains the Point defined by the lon/lat of the home.
-    # If no district contains the Point, then the number of outliners added up in number_outliers.
-
+    # If no district contains the Point, then the number of outliers added up in number_outliers.
 
     df_home_district_list = df_home_list.copy()
     new_columns = [['']*2]*len(df_home_district_list.index)
-    df_home_district_list[district_paras[district_type]['output_additional_columns']] = new_columns
+    df_home_district_list[DISTRICT_PARAMETERS[district_type]['output_additional_columns']] = new_columns
     number_outliers = 0
     print_every = 500
     start_time = time.time()
     prev_time = time.time()
-    now_time = time.time()
     time_list = []
     for home_index, home_row in gdf_home_list.iterrows():
         now_time = time.time()
@@ -321,9 +313,10 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE, test=
         home_pt = home_row["geometry"]
         missing_district = True
         for district_index, district_row in sample_districts_shapes_gdf.iterrows():
+            # TODO: this could be materially sped up by making a quick guess of the district
             if district_row["geometry"].contains(home_pt):
-                df_home_district_list.loc[home_index, district_paras[district_type]['output_additional_columns']] = \
-                    district_row.loc[district_paras[district_type]["district_columns"]].values
+                df_home_district_list.loc[home_index, DISTRICT_PARAMETERS[district_type]['output_additional_columns']] = \
+                    district_row.loc[DISTRICT_PARAMETERS[district_type]["district_columns"]].values
                 missing_district = False
                 break
         if missing_district:
@@ -332,6 +325,5 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE, test=
     # Save dataframe with homes and district info to csv file
     sample_homes_districts_df_nogeo = df_home_district_list.drop("geometry", axis=1)
     if not test:
-        sample_homes_districts_df_nogeo.to_csv(district_paras[district_type]['intermediary_file'], index=False)
+        sample_homes_districts_df_nogeo.to_csv(DISTRICT_PARAMETERS[district_type]['intermediary_file'], index=False)
     return sample_homes_districts_df_nogeo
-
