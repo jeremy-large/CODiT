@@ -69,9 +69,8 @@ def main():
 
     # Read CSV file and rename columns to match home_locations.py
     data = pd.read_excel(args.population_xls, args.sheet_name, index_col=0, usecols="A,B,G", skiprows=4)
-    data.rename(columns={"LSOA Code": "lsoa11cd",
-                         "LSOA Name": "lsoa11nm",
-                         "All Ages": "population"}, inplace=True)
+    data.index.rename("lsoa11cd", inplace=True)
+    data.rename(columns={"LSOA Name": "lsoa11nm", "All Ages": "population"}, inplace=True)
 
     # Filter out regions if specified
     if args.regions:
