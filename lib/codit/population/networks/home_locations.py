@@ -21,8 +21,8 @@ FULL_HOME_LIST_CSV = os.path.join(DATA_PATH, 'city', 'population', 'full_home_li
 COORDINATES_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_wards_list.csv')
 POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv')
 COORDINATES_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_lsoa_list.csv')
-WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'Wards_May_2020_Boundaries_UK_BGC.shp')
-LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'city', 'population', 'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')
+WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'UK_regions', 'Wards_May_2020_Boundaries_UK_BGC.shp')
+LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'UK_regions', 'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')
 DEFAULT_DISTRICT_TYPE = 'Ward'
 
 DISTRICT_PARAMETERS = \
