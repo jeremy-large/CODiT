@@ -1,8 +1,11 @@
 from codit.population.networks import home_locations
 import pytest
-import random
 import numpy
 
+"""
+Note these tests can be destabilised if we change default files so that they refer to a new city.
+Indeed, we plan to do this in the near future.
+"""
 
 
 def test_lsoa_allocation():
