@@ -57,7 +57,7 @@ def test_two_track_city_society():
                  pop_size=8000, seed_size=8000//80, n_days=150,
                  population_type=CityPopulation)
     o.recorder.add_component(WardComponent(o))
-    o.recorder.add_component(MorbidityComponent())
+    o.recorder.add_component(MorbidityComponent(o.pop.people))
     o.simulate()
 
 

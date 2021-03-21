@@ -60,8 +60,8 @@ class MainComponent:
 
 
 class MorbidityComponent:
-    def __init__(self):
-        # self.naive_haz = sum([ifr(person.age) for person in o.pop.people])
+    def __init__(self, people):
+        self.naive_haz = sum([ifr(person.age) for person in people])
         self.story = []
 
     def update(self, o):
