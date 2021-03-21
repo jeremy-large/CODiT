@@ -2,7 +2,9 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+
 from codit.outbreakvisualiser import VisualizerComponent
+from codit.disease import ifr, hospitalization
 
 
 class OutbreakRecorder:
@@ -41,8 +43,6 @@ class MainComponent:
 
     def update(self, o):
         N = len(o.pop.people)
-        # pot_haz = sum([covid_hazard(person.age) for person in o.pop.people])
-        # tot_haz = sum([covid_hazard(person.age) for person in o.pop.infected()])
 
         all_completed_tests = [t for q in o.society.queues for t in q.completed_tests]
         step = [o.time,
@@ -51,17 +51,39 @@ class MainComponent:
                 len(all_completed_tests) / N / o.time_increment,
                 sum(len([t for t in q.tests if t.swab_taken]) for q in o.society.queues) / N,
                 sum(p.isolating for p in o.pop.people) / N,
-                # len([t for t in all_completed_tests if t.positive]) / N / o.time_increment,
-                # tot_haz/pot_haz,
                 ]
         self.story.append(step)
-
-        # wards = {p.home.ward for p in o.pop.people}
-        # step_wards = [wards, [o.pop.count_infected(d, lamda)]]
 
         if o.step_num % (50 * o.society.episodes_per_day) == 1 or (o.step_num == o.n_periods):
             logging.info(f"Day {int(step[0])}, prop infected is {step[1]:2.2f}, "
                          f"prop infectious is {step[2]:2.4f}")
+
+
+class MorbidityComponent:
+    def __init__(self):
+        # self.naive_haz = sum([ifr(person.age) for person in o.pop.people])
+        self.story = []
+
+    def update(self, o):
+        admissions, death, ages = expected_morbidity(o.pop.people)
+        self.story.append([o.time, death, admissions, ages])
+
+
+def expected_morbidity(people, days_to_hospital=8):
+
+    def _sum_weighted_ages(hospitalization_stage):
+        return sum([hospitalization(person.age) * person.age for person in hospitalization_stage])
+
+    daily_advancing_stage = [person for person in people
+                             if days_to_hospital <= person.days_infected() < days_to_hospital + 1]
+    death = sum([ifr(person.age) for person in daily_advancing_stage])
+    admissions = sum([hospitalization(person.age) for person in daily_advancing_stage])
+
+    age_at_admission = np.nan
+    if admissions > 0:
+        age_at_admission = _sum_weighted_ages(daily_advancing_stage) / admissions
+
+    return admissions, death, age_at_admission
 
 
 class VariantComponent:
@@ -82,6 +104,9 @@ class WardComponent:
         self.infected = []
         self.infectious = []
         self.positive_tests = []
+        self.expected_death = []
+        self.expected_hospitalization = []
+        self.hospitalization_age = []
         self._pos_week = []
         self.people_of = dict()
         for ward in self.wards:
@@ -96,6 +121,12 @@ class WardComponent:
                                [sum([p.infectious for p in self.people_of[w]]) / len(self.people_of[w]) for w in
                                 self.wards]
                                )
+
+        admissions, deaths, ages = zip(*[expected_morbidity(self.people_of[w]) for w in self.wards])
+        self.expected_death.append([o.time] + list(deaths))
+        self.expected_hospitalization.append([o.time] + list(admissions))
+        self.hospitalization_age.append([o.time] + list(ages))
+
         pos_tests = [t for q in o.society.queues for t in q.completed_tests if t.positive]
 
         self._pos_week.append([len([t for t in pos_tests if t.person.home.ward == w]) for w in self.wards])
@@ -117,11 +148,20 @@ class WardComponent:
         return df.set_index('days of epidemic')
 
     def plot_weekly_positivity(self, days, title=''):
-        df = self.dataframe(self.positive_tests)[:days + 7][7::7]
+        df = self.story_sorted_by_ward(days + 7, self.positive_tests)[7::7] * 100000
+        rates_title = "Weekly positivity rates " + title
+        y_legend = "Simulated positive tests per 100,000 of population in the previous week"
+        self.plot_all_timeseries(df, rates_title, y_legend)
+
+    def plot_all_timeseries(self, df, rates_title, y_legend):
+        ax = df.plot(grid=True, figsize=(12, 8), title=rates_title)
+        plt.legend(loc='right', bbox_to_anchor=(1.4, 0.5))
+        ax.set_ylabel(y_legend)
+        _ = ax.axhline(0, color='k')
+
+    def story_sorted_by_ward(self, days, story):
+        df = self.dataframe(story)[:days]
         df = df.T
         order = np.argsort(df.iloc[:, -1:].values, axis=None)  # get the order of the last column
         df = df.iloc[np.flip(order)].T
-        ax = (df * 100000).plot(grid=True, figsize=(12,8), title="Weekly positivity rates " + title)
-        plt.legend(loc='right',bbox_to_anchor=(1.4, 0.5))
-        ax.set_ylabel("Simulated positive tests per 100,000 of population in the previous week")
-        _ = ax.axhline(0, color='k')
+        return df

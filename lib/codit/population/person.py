@@ -92,6 +92,7 @@ class Person:
     def recover(self):
         self.infectious = False
         self.disease = None
+        self.time_since_infection = 0
 
     def update_time(self):
 

@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 from codit.outbreak import Outbreak
-from codit.outbreak_recorder import WardComponent
+from codit.outbreak_recorder import WardComponent, MorbidityComponent
 from codit.society import TestingTracingSociety
 from codit.society.alternatives import StrategicTester
 from codit.society.strategic import TwoTrackTester
@@ -57,6 +57,7 @@ def test_two_track_city_society():
                  pop_size=8000, seed_size=8000//80, n_days=150,
                  population_type=CityPopulation)
     o.recorder.add_component(WardComponent(o))
+    o.recorder.add_component(MorbidityComponent())
     o.simulate()
 
 

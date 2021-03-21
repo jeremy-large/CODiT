@@ -20,6 +20,24 @@ def covid_hazard(age):
     return 0
 
 
+def ifr(age):
+    # https://www.medrxiv.org/content/10.1101/2020.07.23.20160895v7
+    # European Journal of Epidemiology doi: 10.1007/s10654-020-00698-1
+    # TODO: no notice is paid here yet, of the increasing hazard of new variants
+    return covid_hazard(age) * 0.004
+
+
+RECIPROCAL_OF_DEATH_GIVEN_HOSPITAL = 4232./1283.
+# 4232: peak daily hospital admissions in the UK Winter 2020/21 (7-day smooth)
+# https://coronavirus.data.gov.uk/details/healthcare
+# 1283: peak deaths per day in the UK Winter 2020/21 (7-day smooth)
+# https://coronavirus.data.gov.uk/details/deaths
+
+
+def hospitalization(age):
+    return ifr(age) * RECIPROCAL_OF_DEATH_GIVEN_HOSPITAL
+
+
 def set_infectivity(name, pr_transmission_per_day):
     """
     :param name:
