@@ -56,7 +56,7 @@ class LSOA(Place):
     """
     with smart_open.open(POPULATION_LSOA_CSV) as fh:
         LSOAs = pd.read_csv(fh)
-    LSOAs.set_index('LSOA Code', inplace=True)
+    LSOAs.set_index('lsoa11cd', inplace=True)
 
     def __init__(self, code, name):
         """
