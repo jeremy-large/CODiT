@@ -27,7 +27,8 @@ class OutbreakRecorder:
         ax = (df.drop(columns=['ever infected']) * 100).plot(grid=True, **kwargs)
         ax.set_ylabel("percent of the population")
         logging.info(f" Realized R0 of early infections is {self.realized_r0:2.2f}")
-        logging.info(f" {self.main_component.story[-1][1] * 100:2.1f} percent of the proportion was infected during the epidemic")
+        logging.info(f" {self.main_component.story[-1][1] * 100:2.1f} "
+                     f"percent of the population was infected during the epidemic")
 
     def get_dataframe(self):
         df = pd.DataFrame(self.main_component.story)
