@@ -21,6 +21,7 @@ def covid_hazard(age):
 
 
 def ifr(age):
+    # Infection Fatality Ratio
     # https://www.medrxiv.org/content/10.1101/2020.07.23.20160895v7
     # European Journal of Epidemiology doi: 10.1007/s10654-020-00698-1
     # TODO: no notice is paid here yet, of the increasing hazard of new variants
