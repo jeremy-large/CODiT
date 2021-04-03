@@ -88,7 +88,7 @@ def main():
 
     # Load the regional_csv file:
     with smart_open.open(args.regional_csv) as fh:
-        reg = pd.read_csv(fh, index_col=0)
+        reg = pd.read_csv(fh)
 
     reg.columns = [c.lower() for c in reg.columns]
     reg_reduced = reg[['lsoa11cd', 'msoa11cd', 'msoa11nm', 'lad17cd', 'lad17nm']].drop_duplicates()
