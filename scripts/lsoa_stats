@@ -109,7 +109,7 @@ def main():
             data.rename(columns={"Value": column_name}, inplace=True)
 
     # Write output csv file
-    with smart_open.open(args.output_csv, "wb") as fh:
+    with smart_open.open(args.output_csv, "w") as fh:
         data.to_csv(fh)
 
 if __name__ == "__main__":
