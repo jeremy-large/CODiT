@@ -20,7 +20,7 @@ DEPRIVATION_CSV = DATA_DIR / "imd2019lsoa.csv.gz"
 # opendatacommunities.org/resource?uri=http%3A%2F%2Fopendatacommunities.org%2Fdata%2Fsocietal-wellbeing%2Fimd2019%2Findices
 
 REGIONAL_CSV = DATA_DIR / "Output_Area_to_LSOA_to_MSOA_to_Local_Authority_District_(December_2017)_" \
-                          "Lookup_with_Area_Classifications_in_Great_Britain.csv"
+                          "Lookup_with_Area_Classifications_in_Great_Britain.csv.gz"
 # geoportal.statistics.gov.uk/datasets/fe6c55f0924b4734adf1cf7104a0173e_0/data
 
 OUTPUT_CSV = share_dir() / "codit" / "data" / "city" / "population" / "sample_lsoa_population.csv.gz"
