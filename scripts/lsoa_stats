@@ -11,11 +11,17 @@ from codit import share_dir
 import numpy as np
 import pandas as pd
 
-POPULATION_XLS = share_dir() / "codit" / "data" / "UK_regions" / "SAPE22DT13-mid-2019-lsoa-Broad_ages-estimates-unformatted.xlsx"
+DATA_DIR = share_dir() / "codit" / "data" / "UK_regions"
+
+POPULATION_XLS = DATA_DIR / "SAPE22DT13-mid-2019-lsoa-Broad_ages-estimates-unformatted.xlsx"
 # www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/lowersuperoutputareamidyearpopulationestimatesnationalstatistics
 
-DEPRIVATION_CSV = share_dir() / "codit" / "data" / "UK_regions" / "imd2019lsoa.csv.gz"
+DEPRIVATION_CSV = DATA_DIR / "imd2019lsoa.csv.gz"
 # opendatacommunities.org/resource?uri=http%3A%2F%2Fopendatacommunities.org%2Fdata%2Fsocietal-wellbeing%2Fimd2019%2Findices
+
+REGIONAL_CSV = DATA_DIR / "Output_Area_to_LSOA_to_MSOA_to_Local_Authority_District_(December_2017)_" \
+                          "Lookup_with_Area_Classifications_in_Great_Britain.csv.gz"
+# geoportal.statistics.gov.uk/datasets/fe6c55f0924b4734adf1cf7104a0173e_0/data
 
 OUTPUT_CSV = share_dir() / "codit" / "data" / "city" / "population" / "sample_lsoa_population.csv.gz"
 
@@ -56,6 +62,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("population_xls", nargs="?", type=Path, default=POPULATION_XLS, help="Path to population excel file")
     parser.add_argument("deprivation_csv", nargs="?", type=Path, default=DEPRIVATION_CSV, help="Path to deprivation csv file")
+    parser.add_argument("regional_csv", nargs="?", type=Path, default=REGIONAL_CSV, help="Path to regional lookup csv")
     parser.add_argument("output_csv", nargs="?", type=Path, default=OUTPUT_CSV, help="Path to population excel file")
     parser.add_argument("--sheet_name", default="Mid-2019 Persons", help="Sheet name for population xls file")
     parser.add_argument("-r", "--regions", nargs='+', help="Optional filter for regions to include (eg 'Leeds')")
@@ -79,6 +86,16 @@ def main():
             mask |= data["lsoa11nm"].str.startswith(region)
         data = data[mask]
 
+    # Load the regional_csv file:
+    with smart_open.open(args.regional_csv) as fh:
+        reg = pd.read_csv(fh)
+
+    reg.columns = [c.lower() for c in reg.columns]
+    reg_reduced = reg[['lsoa11cd', 'msoa11cd', 'msoa11nm', 'lad17cd', 'lad17nm']].drop_duplicates()
+    # duplicates are due to this regional dataset being at an even finer granularity than lsoa
+    reg_reduced.set_index('lsoa11cd', inplace=True)
+    data = data.join(reg_reduced)
+
     # Load the deprivation_csv file
     with smart_open.open(args.deprivation_csv) as fh:
         dep = pd.read_csv(fh, index_col=0)
@@ -92,7 +109,7 @@ def main():
             data.rename(columns={"Value": column_name}, inplace=True)
 
     # Write output csv file
-    with smart_open.open(args.output_csv, "wb") as fh:
+    with smart_open.open(args.output_csv, "w") as fh:
         data.to_csv(fh)
 
 if __name__ == "__main__":
