@@ -7,6 +7,7 @@ class Society:
         if not prob_unnecessary_worry:
             prob_unnecessary_worry = self.cfg.PROB_NON_C19_SYMPTOMS_PER_DAY
         self.episodes_per_day = episodes_per_day or self.cfg.SIMULATOR_PERIODS_PER_DAY
+        assert type(self.episodes_per_day) == int
         self.encounter_size = encounter_size or self.cfg.MEAN_NETWORK_SIZE
         self.prob_worry = prob_unnecessary_worry / self.episodes_per_day
         self.queues = [TestQueue()]

@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 from codit.population.person import Person
 
@@ -23,15 +24,15 @@ class PersonCovid(Person):
         :param days: days since you got infected with the disease
         """
         cov = self.disease
-        if days == cov.days_before_infectious:
+        if np.isclose(days, cov.days_before_infectious):
             self.infectious = True
 
-        elif days == cov.days_before_infectious + cov.days_to_symptoms:
+        elif np.isclose(days, cov.days_before_infectious + cov.days_to_symptoms):
             if random.random() < cov.prob_symptomatic:
                 self._symptomatic = True
                 self.react_to_new_symptoms()
 
-        elif days == cov.days_before_infectious + cov.days_infectious:
+        elif np.isclose(days, cov.days_before_infectious + cov.days_infectious):
             self._symptomatic = False
             self.recover()
 
