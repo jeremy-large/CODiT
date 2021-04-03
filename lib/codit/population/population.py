@@ -43,7 +43,7 @@ class Population:
             for p in random.sample(succeptibles, n_infected[str(d)]):
                 p.set_infected(d)
                 stage = random.random() * seed_periods
-                while p.days_infected() < stage:
+                while p.disease and p.days_infected() < stage:
                     p.update_time()
 
     def count_infectious(self, disease=None):
