@@ -16,6 +16,7 @@ class Test:
             len([s for v in targets for s in v.contacts if not s.immunities])
         self._days_infected = person.days_infected() if person.disease else None
         self._isolating = person.isolating
+        self._disease = str(person.disease or 'None')
         self.swab_taken = False
 
     def update_time(self, timedelta):
