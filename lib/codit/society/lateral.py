@@ -1,5 +1,5 @@
-from codit.society import UKSociety, HighValencyTester
-from codit.society.test import TestQueue
+from codit.society import UKSociety
+from codit.society.test import TestQueue, LateralFlowTest
 import random
 import logging
 from numpy.random import exponential as exp_dis
@@ -15,15 +15,15 @@ def coopt_existing_test(track, notes, person):
 
 class LateralFlowUK(UKSociety):
 
-    DAYS_BETWEEN_REPEATED_TESTS = 4
     VALENCY_TEST_FREQUENCY_DAYS = 4
     GENERAL_VALENCY_QUANTILE_THRESHOLD = 0.9
     LATERAL_TO_PCR_RATIO = 20
     RETEST_POSITIVE_CASES = True
+    DAYS_BETWEEN_REPEATED_TESTS = 4  # not operational at the moment
 
     def __init__(self, **kwargs):
         UKSociety.__init__(self, **kwargs)
-        self.fast_track = TestQueue()
+        self.fast_track = TestQueue(test_type=LateralFlowTest)
         self.slow_track = TestQueue()
         self.queues = (self.fast_track, self.slow_track)
         self.valency_threshold = None
