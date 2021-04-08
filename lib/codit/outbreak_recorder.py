@@ -160,8 +160,10 @@ class WardComponent:
         ax.set_ylabel(y_legend)
         _ = ax.axhline(0, color='k')
 
-    def story_sorted_by_ward(self, days, story):
+    def story_sorted_by_ward(self, days, story, rolling_sum_days=None):
         df = self.dataframe(story)[:days]
+        if rolling_sum_days:
+            df = df.rolling(rolling_sum_days).sum()
         df = df.T
         order = np.argsort(df.iloc[:, -1:].values, axis=None)  # get the order of the last column
         df = df.iloc[np.flip(order)].T

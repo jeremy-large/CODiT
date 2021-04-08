@@ -8,6 +8,7 @@ from codit.population.networks import household_workplace
 from codit.population.networks.city_config.city_cfg import MINIMUM_WORKING_AGE, MAXIMUM_WORKING_AGE, MAXIMUM_CLASS_AGE, MINIMUM_CLASS_AGE, AVERAGE_HOUSEHOLD_SIZE
 from codit.population.networks.city_config.typical_households import build_characteristic_households
 from codit.population.networks.home_locations import Home, get_home_samples
+from codit.population.covid import PersonCovid
 
 EPHEMERAL_CONTACT = 0.1  # people per day
 WITHIN_BUILDING_CONTACT = 0.75
@@ -15,7 +16,7 @@ WITHIN_BUILDING_CONTACT = 0.75
 
 class CityPopulation(FixedNetworkPopulation):
     def __init__(self, n_people, society, person_type=None, lockdown_config=None):
-        Population.__init__(self, n_people, society, person_type=person_type)
+        Population.__init__(self, n_people, society, person_type=person_type or PersonCovid)
         self.households, self.workplaces, self.classrooms, self.care_homes, self.buildings = build_city_structures(self.people)
         self.set_structure(society, lockdown_config=lockdown_config)
 
