@@ -50,7 +50,7 @@ class PersonCovid(Person):
     def get_test_results(self, positive):
         if not positive:
             if self.isolating:
-                self.leave_isolation()
+                self.leave_isolation()   # TODO: even if it was a lateral flow test that turned out negative!
         elif random.random() < self.cfg.PROB_ISOLATE_IF_TESTPOS:
             self.isolate()
 

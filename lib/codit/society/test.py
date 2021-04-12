@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-
+import random
 
 class Test:
     def __init__(self, person, notes, time_to_complete, days_delayed_start=0):
@@ -33,11 +33,29 @@ class Test:
         return self.days_delayed_start + timedelta > self.days_elapsed >= self.days_delayed_start
 
 
+class LateralFlowTest(Test):
+
+    # https://www.bmj.com/content/371/bmj.m4469
+    SENSITIVITY = 0.768
+    SPECIFICITY = 0.9968
+
+    def swab(self):
+        self.positive = self.reaction(self.person.infectious)
+        self.swab_taken = True
+
+    def reaction(self, infectious):
+        r = random.random()
+        if infectious:
+            return r < self.SENSITIVITY
+        return r >= self.SPECIFICITY
+
+
 class TestQueue:
-    def __init__(self):
+    def __init__(self, test_type=None):
         self._taken_and_planned = []
         self.completed_tests = []
         self._tests_of = defaultdict(list)
+        self.test_type = test_type or Test
 
     @property
     def tests(self):
@@ -57,7 +75,7 @@ class TestQueue:
             # do nothing ...
             return
 
-        test = Test(person, notes, time_to_complete, days_delayed_start=days_delayed_start)
+        test = self.test_type(person, notes, time_to_complete, days_delayed_start=days_delayed_start)
         if front_of_queue:
             self._taken_and_planned.insert(0, test)
         else:

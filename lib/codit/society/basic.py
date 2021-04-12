@@ -27,7 +27,7 @@ class Society:
 
     def clear_queues(self):
         for q in self.queues:
-            q.__init__()
+            q.__init__(test_type=q.test_type)
 
 class DraconianSociety(Society):
     def manage_outbreak(self, population):
