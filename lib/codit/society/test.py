@@ -35,13 +35,19 @@ class Test:
 
 class LateralFlowTest(Test):
 
-    SENSITIVITY = 0.75
+    # https://www.bmj.com/content/371/bmj.m4469
+    SENSITIVITY = 0.768
+    SPECIFICITY = 0.9968
 
     def swab(self):
-        self.positive = False
-        if random.random() < self.SENSITIVITY:
-            self.positive = self.person.infectious
+        self.positive = self.reaction(self.person.infectious)
         self.swab_taken = True
+
+    def reaction(self, infectious):
+        r = random.random()
+        if infectious:
+            return r < self.SENSITIVITY
+        return r >= self.SPECIFICITY
 
 
 class TestQueue:
