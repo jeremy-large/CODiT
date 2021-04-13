@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("--city", type=str, default=None,
                     help="name of the area for coordinates enquiries")
-parser.add_argument("--server_sleep_seconds", type=int, default=5,
+parser.add_argument("--server_sleep_seconds", type=int, default=10,
                     help="seconds to sleep between queries of the openstreetmap server")
 parser.add_argument("--extract_coordinates", action='store_true', default=False,
                     help="query the coordinates of accommodation buildings")
