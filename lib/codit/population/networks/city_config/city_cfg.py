@@ -27,6 +27,20 @@ city_paras = \
             'population': 793139,
             # Area str of Leeds for request to OpenStreetMap
             'area_str': "area['ISO3166-2'='GB-LDS'][admin_level=8]"
+        },
+        'Lambeth':
+        {
+            # Total population estimate of Leeds (2019) Source: ONS* https://observatory.leeds.gov.uk/population/
+            'population': 325917,
+            # Area str of Leeds for request to OpenStreetMap
+            'area_str': "area['ISO3166-2'='GB-LBH'][admin_level=8]"
+        },
+        'Wandsworth':
+        {
+            # Total population estimate of Leeds (2019) Source: ONS* https://observatory.leeds.gov.uk/population/
+            'population': 329700,
+            # Area str of Leeds for request to OpenStreetMap
+            'area_str': "area['ISO3166-2'='	GB-WND'][admin_level=8]"
         }
     }
 
