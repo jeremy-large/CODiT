@@ -43,7 +43,13 @@ city_paras = \
             'population': 329700,
             # Area str of Wandsworth for request to OpenStreetMap
             'area_str': "area['ISO3166-2'='	GB-WND'][admin_level=8]"
-        }
+        },
+        'Leicester':
+        {
+            'population': 429130,
+            # google.com/search?client=firefox-b-d&q=open+street+map+relation+leicester
+            'area_str': "area['ISO3166-2'='	GB-LCE'][admin_level=6]"
+        },
     }
 
 
