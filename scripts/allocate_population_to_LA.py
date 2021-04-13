@@ -18,6 +18,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("--city", type=str, default=None,
                     help="name of the area for coordinates enquiries")
+parser.add_argument("--server_sleep_seconds", type=int, default=5,
+                    help="seconds to sleep between queries of the openstreetmap server")
 parser.add_argument("--extract_coordinates", action='store_true', default=False,
                     help="query the coordinates of accommodation buildings")
 parser.add_argument("--allocate_coordinates_to_wards", action='store_true', default=False,
@@ -37,7 +39,9 @@ def main():
             city_name = args.city
         else:
             city_name = CITY_OBSERVE
-        query_accommodation_coords.request_coords_to_csv(COORDINATES_CSV, city_paras[city_name]['area_str'])
+        query_accommodation_coords.request_coords_to_csv(COORDINATES_CSV,
+                                                         city_paras[city_name]['area_str'],
+                                                         args.server_sleep_seconds)
 
     if args.allocate_coordinates_to_wards:
         allocate_coordinates_to_districts(DISTRICT_WARD)
