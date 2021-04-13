@@ -33,7 +33,7 @@ def request_coords_to_csv(csvfilename, city_area, seconds_sleep):
     coords = []
     print(f"To query: {', '.join(building_types)}")
     for building_type in building_types:
-        print(f"Querying {building_type}")
+        print(f"Have assembled {len(coords)} datapoints. Now querying {building_type}")
         r = api.query(f"""
         {city_area};
         (nwr["building"="{building_type}"](area);         
