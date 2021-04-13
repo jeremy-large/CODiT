@@ -19,7 +19,7 @@ TYPES_CONSTRAINTS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'types_hou
 FULL_HOME_LIST_CSV = os.path.join(DATA_PATH, 'city', 'population', 'full_home_list.csv')
 
 COORDINATES_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_wards_list.csv')
-POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv')
+POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv.gz')
 COORDINATES_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_lsoa_list.csv')
 WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'UK_regions', 'Wards_May_2020_Boundaries_UK_BGC.shp')
 LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'UK_regions', 'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')

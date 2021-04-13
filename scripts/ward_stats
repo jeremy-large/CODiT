@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+
+"""
+A script to gather raw population stats together for each ward.
+"""
+
+import sys, argparse
+from pathlib import Path
+import smart_open
+from codit import share_dir
+import numpy as np
+import pandas as pd
+
+DATA_DIR = share_dir() / "codit" / "data"
+
+POPULATION_XLS = DATA_DIR / "UK_regions" / \
+                 "SAPE22DT8a-mid-2019-ward-2019-on-2019 and 2020-LA-syoa-estimates-unformatted.xlsx"
+# www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/wardlevelmidyearpopulationestimatesexperimental
+
+
+OUTPUT_CSV = DATA_DIR / "city" / "population" / "sample_wards_population.csv.gz"
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("population_xls", nargs="?", type=Path, default=POPULATION_XLS, help="Path to population excel file")
+    parser.add_argument("output_csv", nargs="?", type=Path, default=OUTPUT_CSV, help="Path to population excel file")
+    parser.add_argument("--sheet_name", default="Mid-2019 Persons", help="Sheet name for population xls file")
+    parser.add_argument("-r", "--regions", nargs='+', help="Optional filter for regions to include (eg 'Leeds')")
+    args = parser.parse_args()
+
+    # Prevent national data overwriting the default region path
+    if not args.regions and args.output_csv == OUTPUT_CSV:
+        print("Please specify some regions when overwriting the default output_csv file", file=sys.stderr)
+        parser.print_help()
+        sys.exit(2)
+
+    # Read CSV file and rename columns to match home_locations.py
+    data = pd.read_excel(args.population_xls, args.sheet_name, index_col=0, usecols="A,B,F,G", skiprows=4)
+    data.index.rename("wd20cd", inplace=True)
+    data.rename(columns={"Ward Name 1": "wd20nm", "All Ages": "population"}, inplace=True)
+
+    # Filter out regions if specified
+    if args.regions:
+        mask = np.zeros(data.shape[0], dtype=np.bool_)
+        for region in args.regions:
+            mask = mask | data["LA name (2020 boundaries)"].str.startswith(region)
+        data = data[mask]
+
+    # Write output csv file
+    with smart_open.open(args.output_csv, "w") as fh:
+        data.to_csv(fh)
+
+
+if __name__ == "__main__":
+    main()
