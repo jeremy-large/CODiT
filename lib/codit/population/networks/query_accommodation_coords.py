@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import overpy # "conda install -c conda-forge overpy" -- a Python Wrapper to access the OpenStreepMap Overpass API
 import csv
 import time
