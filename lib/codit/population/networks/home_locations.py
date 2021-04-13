@@ -308,7 +308,7 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE, test=
         now_time = time.time()
         time_list.append(now_time - prev_time)
         if home_index % print_every == 0:
-            print(f'Processed {home_index} coordinates, {number_outliers} number of coordinates are outliers, {now_time - start_time}')
+            print(f'Processed {home_index} coordinates, {number_outliers} of the coordinates are outliers, {now_time - start_time}')
         prev_time = now_time
         home_pt = home_row["geometry"]
         missing_district = True
