@@ -50,6 +50,12 @@ city_paras = \
             # google.com/search?client=firefox-b-d&q=open+street+map+relation+leicester
             'area_str': "area['ISO3166-2'='GB-LCE'][admin_level=6]"
         },
+        'Bristol':
+        {
+            'population': 463400,
+            # google.com/search?client=firefox-b-d&q=open+street+map+relation+leicester
+            'area_str': "area['ISO3166-2'='GB-BST'][admin_level=6]"
+        }
     }
 
 
