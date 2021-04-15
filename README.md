@@ -117,3 +117,25 @@ This applies the Simulator to several Models in turn, in order to generate vario
 
 The other two notebooks in `share/notebooks` offer more detailed functionality, 
 including an implementation of a Looper.
+
+
+### Populating city-level data
+
+CODiT is designed to ingest and use OpenStreetMap and UK Government data in order to 
+create a better description of the contact network in a given region of the UK.
+Such data is ingested using scripts in `/scripts`, which lay down files in `/share/codit/data`.
+
+Initially the files are prepopulated with an example city (Leeds, England).
+
+To replace the default data with a new city:
+
+ * arrange for the city to be configured in `lib/codit/population/networks/city_config/city_cfg.py`
+
+ * run these commands (example here is for Bristol): 
+   ```
+   ./lsoa_stats --r Bristol; 
+   ./ward_stats --r Bristol; 
+   python allocate_population_to_LA.py --city Bristol --extract_coordinates  --allocate_coordinates_to_wards --allocate_coordinates_to_lsoa --create_full_homes_list
+   ```
+   
+ * be wary of these scripts overburdening OpenStreetMap's api.
