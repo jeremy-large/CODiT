@@ -27,6 +27,34 @@ city_paras = \
             'population': 793139,
             # Area str of Leeds for request to OpenStreetMap
             'area_str': "area['ISO3166-2'='GB-LDS'][admin_level=8]"
+        },
+        'Lambeth':
+        {
+            # Total population estimate of Lambeth (mid-2018)
+            # Source: London Councils* https://directory.londoncouncils.gov.uk/demographics/lambeth/
+            'population': 325917,
+            # Area str of Lambeth for request to OpenStreetMap
+            'area_str': "area['ISO3166-2'='GB-LBH'][admin_level=8]"
+        },
+        'Wandsworth':
+        {
+            # Total population estimate of Wandsworth (mid-2019) Source: Wandsworth Gov*
+            # https://www.wandsworth.gov.uk/planning-and-building-control/planning-policy/local-plan/local-plan-monitoring/local-plan-population/population-estimates-and-projections/
+            'population': 329700,
+            # Area str of Wandsworth for request to OpenStreetMap
+            'area_str': "area['ISO3166-2'='GB-WND'][admin_level=8]"
+        },
+        'Leicester':
+        {
+            'population': 429130,
+            # google.com/search?client=firefox-b-d&q=open+street+map+relation+leicester
+            'area_str': "area['ISO3166-2'='GB-LCE'][admin_level=6]"
+        },
+        'Bristol':
+        {
+            'population': 463400,
+            # google.com/search?client=firefox-b-d&q=open+street+map+relation+leicester
+            'area_str': "area['ISO3166-2'='GB-BST'][admin_level=6]"
         }
     }
 

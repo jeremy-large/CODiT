@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import overpy # "conda install -c conda-forge overpy" -- a Python Wrapper to access the OpenStreepMap Overpass API
 import csv
 import time
@@ -20,7 +22,7 @@ building_types = ["apartments",
                  "terrace"]
 
 
-def request_coords_to_csv(csvfilename, city_area):
+def request_coords_to_csv(csvfilename, city_area, seconds_sleep):
     """
     Request coordinates of each building type defined in building_types[] in Leeds area from OpenStreetMap, and save
     the results into csv file
@@ -29,7 +31,9 @@ def request_coords_to_csv(csvfilename, city_area):
     """
     api = overpy.Overpass()
     coords = []
+    print(f"To query: {', '.join(building_types)}")
     for building_type in building_types:
+        print(f"Have assembled {len(coords)} datapoints. Now querying {building_type}")
         r = api.query(f"""
         {city_area};
         (nwr["building"="{building_type}"](area);         
@@ -42,7 +46,7 @@ def request_coords_to_csv(csvfilename, city_area):
                    for way in r.ways]
         coords += [(float(rel.center_lon), float(rel.center_lat), building_type) 
                    for rel in r.relations]   
-        time.sleep(5) # leave enough interval between requests to OpenStreetMap server
+        time.sleep(seconds_sleep) # leave enough interval between requests to OpenStreetMap server
     header_name = ['lon', 'lat', 'building_type']
     with open(csvfilename, 'w', newline='') as csv_coords_w:
         coords_wr = csv.writer(csv_coords_w)

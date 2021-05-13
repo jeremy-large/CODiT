@@ -19,7 +19,7 @@ TYPES_CONSTRAINTS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'types_hou
 FULL_HOME_LIST_CSV = os.path.join(DATA_PATH, 'city', 'population', 'full_home_list.csv')
 
 COORDINATES_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_wards_list.csv')
-POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv')
+POPULATION_WARDS_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_wards_population.csv.gz')
 COORDINATES_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'coordinates_lsoa_list.csv')
 WARDS_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'UK_regions', 'Wards_May_2020_Boundaries_UK_BGC.shp')
 LSOA_SHAPEFILE_PATH = os.path.join(DATA_PATH, 'UK_regions', 'LSOA_December_2011_Generalised_Clipped__Boundaries_in_England_and_Wales.shp')
@@ -308,7 +308,7 @@ def allocate_coordinates_to_districts(district_type=DEFAULT_DISTRICT_TYPE, test=
         now_time = time.time()
         time_list.append(now_time - prev_time)
         if home_index % print_every == 0:
-            print(f'Processed {home_index} coordinates, {number_outliers} number of coordinates are outliers, {now_time - start_time}')
+            print(f'Processed {home_index} coordinates, {number_outliers} of the coordinates are outliers, {now_time - start_time}')
         prev_time = now_time
         home_pt = home_row["geometry"]
         missing_district = True
