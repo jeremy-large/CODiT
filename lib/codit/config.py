@@ -29,31 +29,23 @@ class CFG:
     PROB_INFECT_IF_TOGETHER_ON_A_DAY = {'SARS-CoV-2': 0.025, 'B.1.1.7': 0.039, 'B.1.617.2': 0.039 * 1.4}
     #  Tom Wenseleers: could be 60% more transmissible
 
+    X_IMMUNITY = 1.   # more realistic to put this down to 0.8
+
+    X_IMMUNITIES = {'SARS-CoV-2': X_IMMUNITY,
+                    'B.1.1.7': X_IMMUNITY,
+                    'B.1.617.2': X_IMMUNITY ** 2}
+
     CROSS_IMMUNITY = {'other': {'other': 1.},
-                      'SARS-CoV-2': {'SARS-CoV-2': 0.8,
-                                     'B.1.1.7': 0.8,
-                                     'B.1.617.2': 0.8 ** 2},
-
-                      'B.1.1.7': {'SARS-CoV-2': 0.8,
-                                  'B.1.1.7': 0.8,
-                                  'B.1.617.2': 0.8 ** 2},
-
-                      'B.1.617.2': {'SARS-CoV-2': 0.8 ** 2,
-                                    'B.1.1.7': 0.8 ** 2,
-                                    'B.1.617.2': 0.8}}
+                      'SARS-CoV-2': X_IMMUNITIES,
+                      'B.1.1.7': X_IMMUNITIES,
+                      'B.1.617.2': {'SARS-CoV-2': X_IMMUNITY ** 2,
+                                    'B.1.1.7': X_IMMUNITY ** 2,
+                                    'B.1.617.2': X_IMMUNITY}}
     # https://www.gov.uk/government/news/past-covid-19-infection-provides-some-immunity-but-people-may-still-carry-and-transmit-virus
 
-    VACCINATION_IMMUNITY = {'AstraZeneca': {'SARS-CoV-2': 0.8,
-                                            'B.1.1.7': 0.8,
-                                            'B.1.617.2': 0.8 ** 2},
-
-                            'Pfizer': {'SARS-CoV-2': 0.8,
-                                       'B.1.1.7': 0.8,
-                                       'B.1.617.2': 0.8 ** 2},
-
-                            'Moderna': {'SARS-CoV-2': 0.8,
-                                        'B.1.1.7': 0.8,
-                                        'B.1.617.2': 0.8 ** 2}}
+    VACCINATION_IMMUNITY = {'AstraZeneca': X_IMMUNITIES,
+                            'Pfizer': X_IMMUNITIES,
+                            'Moderna': X_IMMUNITIES}
     # https://www.who.int/emergencies/diseases/novel-coronavirus-2019/covid-19-vaccines
     # https://www.gov.uk/government/news/one-dose-of-covid-19-vaccine-can-cut-household-transmission-by-up-to-half
     # https://twitter.com/JamesWard73/status/1388524356490440708
