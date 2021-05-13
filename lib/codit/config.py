@@ -26,15 +26,33 @@ class CFG:
     DURATION_OF_ISOLATION = 10   #tIsol
 
     # Society:
-    PROB_INFECT_IF_TOGETHER_ON_A_DAY = {'SARS-CoV-2': 0.025, 'B.1.1.7': 0.039}
+    PROB_INFECT_IF_TOGETHER_ON_A_DAY = {'SARS-CoV-2': 0.025, 'B.1.1.7': 0.039, 'B.1.617.2': 0.039}
 
     CROSS_IMMUNITY = {'other': {'other'},
-                      'SARS-CoV-2': {'SARS-CoV-2', 'B.1.1.7'},
-                      'B.1.1.7': {'SARS-CoV-2', 'B.1.1.7'}
+                      'SARS-CoV-2': {'SARS-CoV-2': 1.,
+                                     'B.1.1.7': 1.,
+                                     'B.1.617.2': 1.},
+
+                      'B.1.1.7': {'SARS-CoV-2': 1.,
+                                  'B.1.1.7': 1.,
+                                  'B.1.617.2': 1.},
+
+                      'B.1.617.2': {'SARS-CoV-2': 1.,
+                                    'B.1.1.7': 1.,
+                                    'B.1.617.2': 1.},
                       }
 
-    VACCINATION_IMMUNITY = {'AstraZeneca': {'SARS-CoV-2', 'B.1.1.7'},
-                            'Pfizer': {'SARS-CoV-2', 'B.1.1.7'}
+    VACCINATION_IMMUNITY = {'AstraZeneca': {'SARS-CoV-2': 1.,
+                                            'B.1.1.7': 1.,
+                                            'B.1.617.2': 1.},
+
+                            'Pfizer': {'SARS-CoV-2': 1.,
+                                       'B.1.1.7': 1.,
+                                       'B.1.617.2': 1.},
+
+                            'Moderna': {'SARS-CoV-2': 1.,
+                                        'B.1.1.7': 1.,
+                                        'B.1.617.2': 1.}
                             }
 
     # this is a moving target - because depends on hand-washing, masks ...

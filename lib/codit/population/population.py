@@ -39,7 +39,7 @@ class Population:
             n_infected = {str(d): n_infected for d in diseases}
         for d in diseases:
             seed_periods = seed_periods or d.days_infectious
-            succeptibles = [p for p in self.people if p.succeptible_to(d)]
+            succeptibles = [p for p in self.people if p.succeptibility_to(d) > 0]
             for p in random.sample(succeptibles, n_infected[str(d)]):
                 p.set_infected(d)
                 stage = random.random() * seed_periods

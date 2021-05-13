@@ -46,15 +46,19 @@ class Person:
         """
         The idea is that the immunities a person have are a simple dictionary lookup of their covid_experiences
         """
-        immunities = set()
+        immunities = dict()
         for d in self.covid_experiences:
-            immunities |= self.cfg.CROSS_IMMUNITY[str(d)]
+            for name, value in self.cfg.CROSS_IMMUNITY[str(d)].items():
+                immunities[name] = max(value, immunities.get(name, 0.0))
+
         for v in self.vaccinations:
-            immunities |= self.cfg.VACCINATION_IMMUNITY[v]
+            for name, value in self.cfg.VACCINATION_IMMUNITY[v].items():
+                immunities[name] = max(value, immunities.get(name, 0.0))
+
         return immunities
 
-    def succeptible_to(self, disease):
-        return str(disease) not in self.immunities
+    def succeptibility_to(self, disease):
+        return 1. - self.immunities.get(disease, 0.)
 
     def vaccinate_with(self, vaccine):
         assert vaccine in self.cfg.VACCINATION_IMMUNITY
@@ -65,13 +69,14 @@ class Person:
             self.infectious_attack(other, days)
 
     def infectious_attack(self, other, days):
-        if other.succeptible_to(self.disease):
-            if random.random() < self.disease.pr_transmit_per_day * days:
+        succeptibility = other.succeptibility_to(self.disease)
+        if succeptibility > 0:
+            if random.random() < self.disease.pr_transmit_per_day * days * succeptibility:
                 other.set_infected(self.disease, infector=self)
                 self.victims.add(other)
 
     def set_infected(self, disease, infector=None):
-        assert self.succeptible_to(disease)
+        assert self.succeptibility_to(disease) > 0
         self.covid_experiences.append(disease)
         self.infectious = True
         self.disease = disease
