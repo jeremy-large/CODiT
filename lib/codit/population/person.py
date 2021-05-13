@@ -19,12 +19,14 @@ class Person:
         self.infectious = False
         self.time_since_infection = 0
         self.disease = None
-        self.infector = None
+        self.infectors = []
         self.victims = set()
-        self.covid_experiences = []
         self.episode_time = 1. / self.society.episodes_per_day
         self.name = name
+
+        self.covid_experiences = []
         self.vaccinations = []
+        self.update_immunities()
         # Add home attribute for CityPopulation
         self.home = home
 
@@ -41,8 +43,7 @@ class Person:
     def infected(self):
         return len(self.covid_experiences) > 0
 
-    @property
-    def immunities(self):
+    def update_immunities(self):
         """
         The idea is that the immunities a person have are a simple dictionary lookup of their covid_experiences
         """
@@ -55,14 +56,15 @@ class Person:
             for name, value in self.cfg.VACCINATION_IMMUNITY[v].items():
                 immunities[name] = max(value, immunities.get(name, 0.0))
 
-        return immunities
+        self.immunities = immunities
 
     def succeptibility_to(self, disease):
-        return 1. - self.immunities.get(disease, 0.)
+        return 1. - self.immunities.get(str(disease), 0.)
 
     def vaccinate_with(self, vaccine):
         assert vaccine in self.cfg.VACCINATION_IMMUNITY
         self.vaccinations.append(vaccine)
+        self.update_immunities()
 
     def attack(self, other, days):
         if self.infectious:
@@ -78,9 +80,10 @@ class Person:
     def set_infected(self, disease, infector=None):
         assert self.succeptibility_to(disease) > 0
         self.covid_experiences.append(disease)
+        self.update_immunities()
         self.infectious = True
         self.disease = disease
-        self.infector = infector
+        self.infectors.append(infector)
 
     def isolate(self):
         if self.isolation is None:
@@ -125,9 +128,9 @@ class Person:
     def chain(self):
         assert self.covid_experiences, f"We cannot generate a chain for a person who has not been infected. {self}"
         chain = [self]
-        m_inf = self.infector
+        m_inf = self.infectors[0]
         while m_inf is not None:
             chain.append(m_inf)
-            m_inf = m_inf.infector
+            m_inf = m_inf.infectors[0]
         chain.reverse()
         return chain
