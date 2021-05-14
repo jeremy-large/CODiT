@@ -26,16 +26,29 @@ class CFG:
     DURATION_OF_ISOLATION = 10   #tIsol
 
     # Society:
-    PROB_INFECT_IF_TOGETHER_ON_A_DAY = {'SARS-CoV-2': 0.025, 'B.1.1.7': 0.039}
+    PROB_INFECT_IF_TOGETHER_ON_A_DAY = {'SARS-CoV-2': 0.025, 'B.1.1.7': 0.039, 'B.1.617.2': 0.039 * 1.4}
+    #  Tom Wenseleers: could be 60% more transmissible
 
-    CROSS_IMMUNITY = {'other': {'other'},
-                      'SARS-CoV-2': {'SARS-CoV-2', 'B.1.1.7'},
-                      'B.1.1.7': {'SARS-CoV-2', 'B.1.1.7'}
-                      }
+    X_IMMUNITY = 1.   # more realistic to put this down to 0.8
 
-    VACCINATION_IMMUNITY = {'AstraZeneca': {'SARS-CoV-2', 'B.1.1.7'},
-                            'Pfizer': {'SARS-CoV-2', 'B.1.1.7'}
-                            }
+    __X_IMMUNITIES = {'SARS-CoV-2': X_IMMUNITY,
+                    'B.1.1.7': X_IMMUNITY,
+                    'B.1.617.2': X_IMMUNITY ** 2}
+
+    CROSS_IMMUNITY = {'other': {'other': 1.},
+                      'SARS-CoV-2': __X_IMMUNITIES,
+                      'B.1.1.7': __X_IMMUNITIES,
+                      'B.1.617.2': {'SARS-CoV-2': X_IMMUNITY ** 2,
+                                    'B.1.1.7': X_IMMUNITY ** 2,
+                                    'B.1.617.2': X_IMMUNITY}}
+    # https://www.gov.uk/government/news/past-covid-19-infection-provides-some-immunity-but-people-may-still-carry-and-transmit-virus
+
+    VACCINATION_IMMUNITY = {'AstraZeneca': __X_IMMUNITIES,
+                            'Pfizer': __X_IMMUNITIES,
+                            'Moderna': __X_IMMUNITIES}
+    # https://www.who.int/emergencies/diseases/novel-coronavirus-2019/covid-19-vaccines
+    # https://www.gov.uk/government/news/one-dose-of-covid-19-vaccine-can-cut-household-transmission-by-up-to-half
+    # https://twitter.com/JamesWard73/status/1388524356490440708
 
     # this is a moving target - because depends on hand-washing, masks ...
     # 'B.1.1.7' 56% more infectious than initial strain

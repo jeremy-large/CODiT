@@ -19,12 +19,14 @@ class Person:
         self.infectious = False
         self.time_since_infection = 0
         self.disease = None
-        self.infector = None
+        self.infectors = []
         self.victims = set()
-        self.covid_experiences = []
         self.episode_time = 1. / self.society.episodes_per_day
         self.name = name
+
+        self.covid_experiences = []
         self.vaccinations = []
+        self.update_immunities()
         # Add home attribute for CityPopulation
         self.home = home
 
@@ -41,41 +43,47 @@ class Person:
     def infected(self):
         return len(self.covid_experiences) > 0
 
-    @property
-    def immunities(self):
+    def update_immunities(self):
         """
         The idea is that the immunities a person have are a simple dictionary lookup of their covid_experiences
         """
-        immunities = set()
+        immunities = dict()
         for d in self.covid_experiences:
-            immunities |= self.cfg.CROSS_IMMUNITY[str(d)]
-        for v in self.vaccinations:
-            immunities |= self.cfg.VACCINATION_IMMUNITY[v]
-        return immunities
+            for name, value in self.cfg.CROSS_IMMUNITY[str(d)].items():
+                immunities[name] = max(value, immunities.get(name, 0.0))
 
-    def succeptible_to(self, disease):
-        return str(disease) not in self.immunities
+        for v in self.vaccinations:
+            for name, value in self.cfg.VACCINATION_IMMUNITY[v].items():
+                immunities[name] = max(value, immunities.get(name, 0.0))
+
+        self.immunities = immunities
+
+    def succeptibility_to(self, disease):
+        return 1. - self.immunities.get(str(disease), 0.)
 
     def vaccinate_with(self, vaccine):
         assert vaccine in self.cfg.VACCINATION_IMMUNITY
         self.vaccinations.append(vaccine)
+        self.update_immunities()
 
     def attack(self, other, days):
         if self.infectious:
             self.infectious_attack(other, days)
 
     def infectious_attack(self, other, days):
-        if other.succeptible_to(self.disease):
-            if random.random() < self.disease.pr_transmit_per_day * days:
+        succeptibility = other.succeptibility_to(self.disease)
+        if succeptibility > 0:
+            if random.random() < self.disease.pr_transmit_per_day * days * succeptibility:
                 other.set_infected(self.disease, infector=self)
                 self.victims.add(other)
 
     def set_infected(self, disease, infector=None):
-        assert self.succeptible_to(disease)
+        assert self.succeptibility_to(disease) > 0
         self.covid_experiences.append(disease)
+        self.update_immunities()
         self.infectious = True
         self.disease = disease
-        self.infector = infector
+        self.infectors.append(infector)
 
     def isolate(self):
         if self.isolation is None:
@@ -120,9 +128,9 @@ class Person:
     def chain(self):
         assert self.covid_experiences, f"We cannot generate a chain for a person who has not been infected. {self}"
         chain = [self]
-        m_inf = self.infector
+        m_inf = self.infectors[0]
         while m_inf is not None:
             chain.append(m_inf)
-            m_inf = m_inf.infector
+            m_inf = m_inf.infectors[0]
         chain.reverse()
         return chain

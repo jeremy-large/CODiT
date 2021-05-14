@@ -39,7 +39,7 @@ class Population:
             n_infected = {str(d): n_infected for d in diseases}
         for d in diseases:
             seed_periods = seed_periods or d.days_infectious
-            succeptibles = [p for p in self.people if p.succeptible_to(d)]
+            succeptibles = [p for p in self.people if p.succeptibility_to(d) > 0]
             for p in random.sample(succeptibles, n_infected[str(d)]):
                 p.set_infected(d)
                 stage = random.random() * seed_periods
@@ -73,7 +73,7 @@ class Population:
         :return: We look at early infectees only.
         """
         n_victims = [len(person.victims) for person in self.people if
-                     person.infector is not None and
+                     person.infectors and
                      len(person.chain()) <= max_chain_len]
         return np.mean(n_victims)
 

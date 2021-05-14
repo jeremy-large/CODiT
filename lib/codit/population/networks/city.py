@@ -24,12 +24,14 @@ class CityPopulation(FixedNetworkPopulation):
         """
         :param encounter_size: not used
         :param group_size: not used
+        :param lockdown_config: determines how lockdown affects the network structure
         :return:
         """
-        lockdown_config = lockdown_config or {'classrooms': 0, 'workplaces': 0}
-        static_cliques = self.build_city_cliques(lockdown_config)
+        cfg = {'classrooms': 0, 'workplaces': 0, 'ephemeral_contact': EPHEMERAL_CONTACT}
+        cfg.update(lockdown_config or dict())
+        static_cliques = self.build_city_cliques(cfg)
         logging.info(f"Adding {len(static_cliques)} permanent contact groups")
-        dynamic_cliques = FixedNetworkPopulation.fix_cliques(self, EPHEMERAL_CONTACT)
+        dynamic_cliques = FixedNetworkPopulation.fix_cliques(self, cfg['ephemeral_contact'])
         logging.info(f"Adding {len(dynamic_cliques)} ephemeral contact pairs")
 
         building_cliques = []
