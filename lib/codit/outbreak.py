@@ -6,7 +6,7 @@ from codit.population.population import FixedNetworkPopulation
 
 
 class Outbreak:
-    def __init__(self, society, diseases, pop_size=0, seed_size=0, n_days=0,
+    def __init__(self, society, diseases=set(), pop_size=0, seed_size=0, n_days=0,
                  population=None,
                  population_type=None,
                  person_type=None,

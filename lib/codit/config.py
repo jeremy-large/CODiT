@@ -31,24 +31,7 @@ class CFG:
 
     X_IMMUNITY = 1.   # more realistic to put this down to 0.8
 
-    __X_IMMUNITIES = {'SARS-CoV-2': X_IMMUNITY,
-                    'B.1.1.7': X_IMMUNITY,
-                    'B.1.617.2': X_IMMUNITY ** 2}
 
-    CROSS_IMMUNITY = {'other': {'other': 1.},
-                      'SARS-CoV-2': __X_IMMUNITIES,
-                      'B.1.1.7': __X_IMMUNITIES,
-                      'B.1.617.2': {'SARS-CoV-2': X_IMMUNITY ** 2,
-                                    'B.1.1.7': X_IMMUNITY ** 2,
-                                    'B.1.617.2': X_IMMUNITY}}
-    # https://www.gov.uk/government/news/past-covid-19-infection-provides-some-immunity-but-people-may-still-carry-and-transmit-virus
-
-    VACCINATION_IMMUNITY = {'AstraZeneca': __X_IMMUNITIES,
-                            'Pfizer': __X_IMMUNITIES,
-                            'Moderna': __X_IMMUNITIES}
-    # https://www.who.int/emergencies/diseases/novel-coronavirus-2019/covid-19-vaccines
-    # https://www.gov.uk/government/news/one-dose-of-covid-19-vaccine-can-cut-household-transmission-by-up-to-half
-    # https://twitter.com/JamesWard73/status/1388524356490440708
 
     # this is a moving target - because depends on hand-washing, masks ...
     # 'B.1.1.7' 56% more infectious than initial strain
@@ -69,6 +52,31 @@ class CFG:
     _PROPORTION_OF_INFECTED_WHO_GET_TESTED = PROB_SYMPTOMATIC * \
                                              PROB_APPLY_FOR_TEST_IF_SYMPTOMS * \
                                              PROB_TEST_IF_REQUESTED   # should be 0.205
+    
+    @property
+    def __X_IMMUNITIES(self):
+        return {'SARS-CoV-2': self.X_IMMUNITY,
+                    'B.1.1.7': self.X_IMMUNITY,
+                    'B.1.617.2': self.X_IMMUNITY ** 2}
+
+    @property
+    def CROSS_IMMUNITY(self): 
+        return {'other': {'other': 1.},
+                      'SARS-CoV-2': self.__X_IMMUNITIES,
+                      'B.1.1.7': self.__X_IMMUNITIES,
+                      'B.1.617.2': {'SARS-CoV-2': self.X_IMMUNITY ** 2,
+                                    'B.1.1.7': self.X_IMMUNITY ** 2,
+                                    'B.1.617.2': self.X_IMMUNITY}}
+    # https://www.gov.uk/government/news/past-covid-19-infection-provides-some-immunity-but-people-may-still-carry-and-transmit-virus
+    
+    @property
+    def VACCINATION_IMMUNITY(self):
+        return {'AstraZeneca': self.__X_IMMUNITIES,
+                            'Pfizer': self.__X_IMMUNITIES,
+                            'Moderna': self.__X_IMMUNITIES}
+    # https://www.who.int/emergencies/diseases/novel-coronavirus-2019/covid-19-vaccines
+    # https://www.gov.uk/government/news/one-dose-of-covid-19-vaccine-can-cut-household-transmission-by-up-to-half
+    # https://twitter.com/JamesWard73/status/1388524356490440708        
 
 def set_config(obj, conf):
     obj.cfg = CFG()
