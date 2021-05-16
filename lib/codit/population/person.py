@@ -14,14 +14,14 @@ class Isolation:
 class Person:
     def __init__(self, society, config=None, name=None, home=None):
         set_config(self, config)
-        self.society = society
+
+        self.simplify_state()
+        self.adopt_society(society)
+
         self.isolation = None
         self.infectious = False
         self.time_since_infection = 0
         self.disease = None
-        self.infectors = []
-        self.victims = set()
-        self.episode_time = 1. / self.society.episodes_per_day
         self.name = name
 
         self.covid_experiences = []
@@ -29,6 +29,15 @@ class Person:
         self.update_immunities()
         # Add home attribute for CityPopulation
         self.home = home
+
+    def simplify_state(self):
+        self.infectors = []
+        self.victims = set()
+        self.society = None
+
+    def adopt_society(self, society):
+        self.society = society
+        self.episode_time = 1. / self.society.episodes_per_day
 
     def __repr__(self):
         if self.name is None:
@@ -83,7 +92,8 @@ class Person:
         self.update_immunities()
         self.infectious = True
         self.disease = disease
-        self.infectors.append(infector)
+        if infector:
+            self.infectors.append(infector)
 
     def isolate(self):
         if self.isolation is None:
@@ -128,9 +138,9 @@ class Person:
     def chain(self):
         assert self.covid_experiences, f"We cannot generate a chain for a person who has not been infected. {self}"
         chain = [self]
-        m_inf = self.infectors[0]
-        while m_inf is not None:
-            chain.append(m_inf)
+        m_inf = self
+        while m_inf.infectors:
             m_inf = m_inf.infectors[0]
+            chain.append(m_inf)
         chain.reverse()
         return chain

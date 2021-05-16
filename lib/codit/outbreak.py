@@ -40,6 +40,7 @@ class Outbreak:
                     "The people in this population are of the wrong type"
             if reset:
                 population.reset_people(society)
+            population.adopt_society(society)
             self.pop = population
             return population
 
