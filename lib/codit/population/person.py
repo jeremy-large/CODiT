@@ -1,15 +1,7 @@
 import random
 
 from codit.config import set_config
-
-
-class Isolation:
-    def __init__(self):
-        self.days_elapsed = 0
-
-    def update_time(self, timedelta):
-        self.days_elapsed += timedelta
-
+from codit.immunity import ImmuneResponse, INFECTIONS
 
 class Person:
     def __init__(self, society, config=None, name=None, home=None):
@@ -18,15 +10,16 @@ class Person:
         self.simplify_state()
         self.adopt_society(society)
 
-        self.isolation = None
+        self.days_in_isolation = None
         self.infectious = False
         self.time_since_infection = 0
+
         self.disease = None
         self.name = name
 
-        self.covid_experiences = []
-        self.vaccinations = []
-        self.update_immunities()
+
+        self.immunities = ImmuneResponse(0)
+
         # Add home attribute for CityPopulation
         self.home = home
 
@@ -50,31 +43,16 @@ class Person:
 
     @property
     def infected(self):
-        return len(self.covid_experiences) > 0
-
-    def update_immunities(self):
-        """
-        The idea is that the immunities a person have are a simple dictionary lookup of their covid_experiences
-        """
-        immunities = dict()
-        for d in self.covid_experiences:
-            if d.variant:
-                for key, value in self.cfg.CROSS_IMMUNITY[d.variant].items():
-                    immunities[key] = max(value, immunities.get(key, 0.0))
-
-        for v in self.vaccinations:
-            for key, value in self.cfg.VACCINATION_IMMUNITY[v].items():
-                immunities[key] = max(value, immunities.get(key, 0.0))
-
-        self.immunities = immunities
+        return (self.immunities & INFECTIONS) != 0
 
     def succeptibility_to(self, disease):
-        return 1. - self.immunities.get(disease.variant, 0.)
+        if disease.variant:
+            return 1.0 - max((self.cfg.IMMUNITIES[response].get(disease.variant, 0.0) for response in self.immunities), default=0.0)
+        return 0.0
 
     def vaccinate_with(self, immune_response):
-        assert immune_response in self.cfg.VACCINATION_IMMUNITY
-        self.vaccinations.append(immune_response)
-        self.update_immunities()
+        assert immune_response in self.cfg.IMMUNITIES
+        self.immunities |= immune_response
 
     def attack(self, other, days):
         if self.infectious:
@@ -89,24 +67,22 @@ class Person:
 
     def set_infected(self, disease, infector=None):
         assert self.succeptibility_to(disease) > 0
-        self.covid_experiences.append(disease)
-        self.update_immunities()
+
+        self.immunities |= disease.variant
         self.infectious = True
         self.disease = disease
         if infector:
             self.infectors.append(infector)
 
     def isolate(self):
-        if self.isolation is None:
-            self.isolation = Isolation()
+        self.days_in_isolation = 0
 
     def leave_isolation(self):
-        assert self.isolating
-        self.isolation = None
+        self.days_in_isolation = None
 
     @property
     def isolating(self):
-        return self.isolation is not None
+        return self.days_in_isolation is not None
 
     def recover(self):
         self.infectious = False
@@ -114,30 +90,24 @@ class Person:
         self.time_since_infection = 0
 
     def update_time(self):
-
         if self.isolating:
-            self.isolation.update_time(self.episode_time)
-            self.consider_leaving_isolation()
+            self.days_in_isolation += self.episode_time
+            if self.days_in_isolation > self.cfg.DURATION_OF_ISOLATION:
+                self.leave_isolation()
 
         if self.disease is not None:
             self.time_since_infection += 1
             self.update_disease(self.days_infected())
-        else:
-            pass
 
     def days_infected(self):
         return self.time_since_infection / self.society.episodes_per_day
 
-    def consider_leaving_isolation(self):
-        if self.isolation.days_elapsed > self.cfg.DURATION_OF_ISOLATION:
-            self.leave_isolation()
-
     def update_disease(self, days_since_infect):
-        if days_since_infect == self.disease.days_infectious:
+        if days_since_infect >= self.disease.days_infectious:
             self.recover()
 
     def chain(self):
-        assert self.covid_experiences, f"We cannot generate a chain for a person who has not been infected. {self}"
+        assert self.infected, f"We cannot generate a chain for a person who has not been infected. {self}"
         chain = [self]
         m_inf = self
         while m_inf.infectors:

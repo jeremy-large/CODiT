@@ -54,17 +54,21 @@ class Population:
                 while p.disease and p.days_infected() < stage:
                     p.update_time()
 
-    def count_infectious(self, disease=None):
-        infected = self.infected(disease)
-        return sum(p.infectious for p in infected)
+    def count_infectious(self, variant=None):
+        return sum(p.infectious for p in self.infected(variant))
 
-    def count_infected(self, disease=None):
-        return len(self.infected(disease))
+    def count_infected(self, variant=None):
+        return sum(1 for p in self.infected(variant))
 
-    def infected(self, disease=None):
-        if disease is None:
-            return [p for p in self.people if p.covid_experiences]
-        return [p for p in self.people if disease in p.covid_experiences]
+    def infected(self, variant=None):
+        if variant:
+            for p in self.people:
+                if variant in p.immunities:
+                    yield p
+        else:
+            for p in self.people:
+                if p.infected:
+                    yield p
 
     def update_time(self):
         for p in self.people:

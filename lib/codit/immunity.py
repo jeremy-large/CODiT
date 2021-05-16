@@ -14,3 +14,7 @@ class ImmuneResponse(IntFlag):
             b = n & (~n + 1)
             yield ImmuneResponse(b)
             n ^= b
+
+INFECTIONS = (ImmuneResponse.SARS_CoV_2_INFECTION
+              | ImmuneResponse.B_1_1_7_INFECTION
+              | ImmuneResponse.B_1_617_2_INFECTION)

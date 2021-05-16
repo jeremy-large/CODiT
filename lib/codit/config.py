@@ -31,10 +31,6 @@ class CFG:
                                          ImmuneResponse.B_1_617_2_INFECTION: 0.039 * 1.4 }
     #  Tom Wenseleers: could be 60% more transmissible
 
-    X_IMMUNITY = 1.   # more realistic to put this down to 0.8
-
-
-
     # this is a moving target - because depends on hand-washing, masks ...
     # 'B.1.1.7' 56% more infectious than initial strain
     PROB_NON_C19_SYMPTOMS_PER_DAY = 0.01  # like b - probability someone unnecessarily requests a test on a given day
@@ -54,27 +50,28 @@ class CFG:
     _PROPORTION_OF_INFECTED_WHO_GET_TESTED = PROB_SYMPTOMATIC * \
                                              PROB_APPLY_FOR_TEST_IF_SYMPTOMS * \
                                              PROB_TEST_IF_REQUESTED   # should be 0.205
-    
+
+
+    X_IMMUNITY = 1.   # more realistic to put this down to 0.8
+
     @property
-    def __X_IMMUNITIES(self):
+    def DEFAULT_X_IMMUNITIES(self):
         return { ImmuneResponse.SARS_CoV_2_INFECTION: self.X_IMMUNITY,
                  ImmuneResponse.B_1_1_7_INFECTION: self.X_IMMUNITY,
                  ImmuneResponse.B_1_617_2_INFECTION: self.X_IMMUNITY ** 2 }
 
     @property
-    def CROSS_IMMUNITY(self): 
-        return { ImmuneResponse.SARS_CoV_2_INFECTION: self.__X_IMMUNITIES,
-                 ImmuneResponse.B_1_1_7_INFECTION: self.__X_IMMUNITIES,
+    def IMMUNITIES(self):
+        return { ImmuneResponse.SARS_CoV_2_INFECTION: self.DEFAULT_X_IMMUNITIES,
+                 ImmuneResponse.B_1_1_7_INFECTION: self.DEFAULT_X_IMMUNITIES,
                  ImmuneResponse.B_1_617_2_INFECTION: { ImmuneResponse.SARS_CoV_2_INFECTION: self.X_IMMUNITY ** 2,
                                                        ImmuneResponse.B_1_1_7_INFECTION: self.X_IMMUNITY ** 2,
-                                                       ImmuneResponse.B_1_617_2_INFECTION: self.X_IMMUNITY }}
+                                                       ImmuneResponse.B_1_617_2_INFECTION: self.X_IMMUNITY },
+                 ImmuneResponse.ASTRAZENECA_1ST_DOSE: self.DEFAULT_X_IMMUNITIES,
+                 ImmuneResponse.PFIZER_1ST_DOSE: self.DEFAULT_X_IMMUNITIES,
+                 ImmuneResponse.MODERNA_1ST_DOSE: self.DEFAULT_X_IMMUNITIES }
+
     # https://www.gov.uk/government/news/past-covid-19-infection-provides-some-immunity-but-people-may-still-carry-and-transmit-virus
-    
-    @property
-    def VACCINATION_IMMUNITY(self):
-        return { ImmuneResponse.ASTRAZENECA_1ST_DOSE: self.__X_IMMUNITIES,
-                 ImmuneResponse.PFIZER_1ST_DOSE: self.__X_IMMUNITIES,
-                 ImmuneResponse.MODERNA_1ST_DOSE: self.__X_IMMUNITIES }
     # https://www.who.int/emergencies/diseases/novel-coronavirus-2019/covid-19-vaccines
     # https://www.gov.uk/government/news/one-dose-of-covid-19-vaccine-can-cut-household-transmission-by-up-to-half
     # https://twitter.com/JamesWard73/status/1388524356490440708        

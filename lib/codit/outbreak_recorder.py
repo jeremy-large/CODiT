@@ -1,10 +1,13 @@
 import logging
+from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from codit.outbreakvisualiser import VisualizerComponent
 from codit.disease import ifr, hospitalization
+
+from codit.immunity import ImmuneResponse, INFECTIONS
 
 
 class OutbreakRecorder:
@@ -92,12 +95,16 @@ class VariantComponent:
         self.story = []
 
     def update(self, o):
-        variants = list({d for p in o.pop.people for d in p.covid_experiences})
+        # count the cases of each variant in the population
+        variants = defaultdict(lambda: 0)
+        for p in o.pop.people:
+            for v in p.immunities & INFECTIONS:
+                variants[v] += 1
+
         self.story.append([o.time,
                            variants,
-                           [o.pop.count_infected(d) for d in variants],
-                           [o.pop.count_infectious(d) for d in variants]])
-
+                           [o.pop.count_infected(v) for v in INFECTIONS],
+                           [o.pop.count_infectious(v) for v in INFECTIONS]])
 
 class WardComponent:
     def __init__(self, o):
