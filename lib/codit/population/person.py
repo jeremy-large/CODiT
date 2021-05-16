@@ -58,21 +58,22 @@ class Person:
         """
         immunities = dict()
         for d in self.covid_experiences:
-            for name, value in self.cfg.CROSS_IMMUNITY[str(d)].items():
-                immunities[name] = max(value, immunities.get(name, 0.0))
+            if d.variant:
+                for key, value in self.cfg.CROSS_IMMUNITY[d.variant].items():
+                    immunities[key] = max(value, immunities.get(key, 0.0))
 
         for v in self.vaccinations:
-            for name, value in self.cfg.VACCINATION_IMMUNITY[v].items():
-                immunities[name] = max(value, immunities.get(name, 0.0))
+            for key, value in self.cfg.VACCINATION_IMMUNITY[v].items():
+                immunities[key] = max(value, immunities.get(key, 0.0))
 
         self.immunities = immunities
 
     def succeptibility_to(self, disease):
-        return 1. - self.immunities.get(str(disease), 0.)
+        return 1. - self.immunities.get(disease.variant, 0.)
 
-    def vaccinate_with(self, vaccine):
-        assert vaccine in self.cfg.VACCINATION_IMMUNITY
-        self.vaccinations.append(vaccine)
+    def vaccinate_with(self, immune_response):
+        assert immune_response in self.cfg.VACCINATION_IMMUNITY
+        self.vaccinations.append(immune_response)
         self.update_immunities()
 
     def attack(self, other, days):
