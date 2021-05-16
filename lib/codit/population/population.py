@@ -15,6 +15,14 @@ class Population:
         for person in self.people:
             person.__init__(society, config=society.cfg.__dict__, name=person.name, home=person.home)
 
+    def adopt_society(self, society):
+        for person in self.people:
+            person.adopt_society(society)
+
+    def clear_memory(self):
+        for person in self.people:
+            person.simplify_state()
+
     def attack_in_groupings(self, group_size):
         groups = self.form_groupings(group_size)
         for g in groups:
