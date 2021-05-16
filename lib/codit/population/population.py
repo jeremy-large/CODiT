@@ -40,19 +40,7 @@ class Population:
         return (random.sample(self.people, group_size) for _ in range(len(self.people)))
 
     def seed_infections(self, n_infected, diseases, seed_periods=None):
-        if type(diseases) is not set:
-            diseases = {diseases}
-        if type(n_infected) is not dict:
-            assert type(n_infected) == int
-            n_infected = {str(d): n_infected for d in diseases}
-        for d in diseases:
-            seed_periods = seed_periods or d.days_infectious
-            succeptibles = [p for p in self.people if p.succeptibility_to(d) > 0]
-            for p in random.sample(succeptibles, n_infected[str(d)]):
-                p.set_infected(d)
-                stage = random.random() * seed_periods
-                while p.disease and p.days_infected() < stage:
-                    p.update_time()
+        seed_infection(n_infected, self.people, diseases, seed_periods=seed_periods)
 
     def count_infectious(self, disease=None):
         infected = self.infected(disease)
@@ -84,6 +72,22 @@ class Population:
                      person.infectors and
                      len(person.chain()) <= max_chain_len]
         return np.mean(n_victims)
+
+
+def seed_infection(n_infected, people, diseases, seed_periods=None):
+    if type(diseases) is not set:
+        diseases = {diseases}
+    if type(n_infected) is not dict:
+        assert type(n_infected) == int
+        n_infected = {str(d): n_infected for d in diseases}
+    for d in diseases:
+        seed_periods = seed_periods or d.days_infectious
+        succeptibles = [p for p in people if p.succeptibility_to(d) > 0]
+        for p in random.sample(succeptibles, n_infected[str(d)]):
+            p.set_infected(d)
+            stage = random.random() * seed_periods
+            while p.disease and p.days_infected() < stage:
+                p.update_time()
 
 
 class FixedNetworkPopulation(Population):
