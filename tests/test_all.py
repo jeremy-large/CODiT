@@ -2,17 +2,17 @@ import random
 import numpy as np
 
 from codit.society import Society
-from codit.disease import Disease
+from codit.disease import Covid
 from codit.outbreak import Outbreak
 from codit.population import Population
 from codit.population.person import Person
+from codit.immunity import ImmuneResponse
 
 ALL_TIME_DAYS = 50
 
 
 def test_uk_ovespill_model():
     from codit.society.alternatives import UKSociety
-    from codit.disease import Covid
     random.seed(42)
     np.random.seed(42)
     o = Outbreak(UKSociety(config=dict(PROB_NON_C19_SYMPTOMS_PER_DAY=0.1)),
@@ -65,22 +65,22 @@ def test_draconian_population_model():
     from codit.society.basic import DraconianSociety
     random.seed(42)
     s = DraconianSociety(episodes_per_day=5, encounter_size=2)
-    d = Disease(days_infectious=10, pr_transmission_per_day=0.2)
+    d = Covid(days_infectious=10, pr_transmission_per_day=0.2, variant=ImmuneResponse.SARS_CoV_2_INFECTION)
     # seed size is the number of people in the population who we seed as being infected:
     o = Outbreak(s, d, pop_size=1000, seed_size=2, n_days=ALL_TIME_DAYS, population_type=Population, person_type=Person)
     # so, this is a village of 10000 people with 2 starting off infected
     o.simulate()
-    np.testing.assert_allclose(o.recorder.main_component.story[90:95], [[18.2, 0.002, 0.0, 0.0, 0.0, 0.0],
-                                                         [18.4, 0.002, 0.0, 0.0, 0.0, 0.0],
-                                                         [18.6, 0.002, 0.0, 0.0, 0.0, 0.0],
-                                                         [18.8, 0.002, 0.0, 0.0, 0.0, 0.0],
-                                                         [19.0, 0.002, 0.0, 0.0, 0.0, 0.0]])
+    np.testing.assert_allclose(o.recorder.main_component.story[90:95], [[18.2, 0.002, 0.0, 0.0, 0.0, 0.001],
+                                                                        [18.4, 0.002, 0.0, 0.0, 0.0, 0.001],
+                                                                        [18.6, 0.002, 0.0, 0.0, 0.0, 0.001],
+                                                                        [18.8, 0.002, 0.0, 0.0, 0.0, 0.001],
+                                                                        [19.0, 0.002, 0.0, 0.0, 0.0, 0.001]])
 
 
 def test_toy_model():
     random.seed(42)
     s = Society(episodes_per_day=5, encounter_size=2)
-    d = Disease(days_infectious=10, pr_transmission_per_day=0.2)
+    d = Covid(days_infectious=10, pr_transmission_per_day=0.2, variant=ImmuneResponse.SARS_CoV_2_INFECTION)
     # seed size is the number of people in the population who we seed as being infected:
     o = Outbreak(s, d, pop_size=1000, seed_size=2, n_days=ALL_TIME_DAYS, population_type=Population, person_type=Person)
     # so, this is a village of 10000 people with 2 starting off infected

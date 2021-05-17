@@ -48,11 +48,12 @@ class Population:
         for d in diseases:
             seed_periods = seed_periods or d.days_infectious
             succeptibles = [p for p in self.people if p.succeptibility_to(d) > 0]
-            for p in random.sample(succeptibles, n_infected[str(d)]):
-                p.set_infected(d)
-                stage = random.random() * seed_periods
-                while p.disease and p.days_infected() < stage:
-                    p.update_time()
+            if succeptibles:
+                for p in random.sample(succeptibles, n_infected[str(d)]):
+                    p.set_infected(d)
+                    stage = random.random() * seed_periods
+                    while p.disease and p.days_infected() < stage:
+                        p.update_time()
 
     def count_infectious(self, variant=None):
         return sum(p.infectious for p in self.infected(variant))

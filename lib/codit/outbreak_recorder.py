@@ -96,15 +96,22 @@ class VariantComponent:
 
     def update(self, o):
         # count the cases of each variant in the population
-        variants = defaultdict(lambda: 0)
-        for p in o.pop.people:
-            for v in p.immunities & INFECTIONS:
-                variants[v] += 1
+        infected_variants = defaultdict(lambda: 0)
+        infectious_variants = defaultdict(lambda: 0)
+        row = [o.time]
+        for v in INFECTIONS:
+            row.append(o.pop.count_infected(v))
+            row.append(o.pop.count_infectious(v))
+        self.story.append(row)
 
-        self.story.append([o.time,
-                           variants,
-                           [o.pop.count_infected(v) for v in INFECTIONS],
-                           [o.pop.count_infectious(v) for v in INFECTIONS]])
+    def columns(self):
+        """Get the column for each row in the story"""
+        columns = ["time"]
+        for v in INFECTIONS:
+            columns.append(f"{v.name} infected")
+            columns.append(f"{v.name} infectous")
+        return columns
+
 
 class WardComponent:
     def __init__(self, o):

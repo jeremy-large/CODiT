@@ -24,7 +24,7 @@ class Person:
         self.home = home
 
     def simplify_state(self):
-        self.infectors = []
+        self.infectors = [] # first infector
         self.victims = set()
         self.society = None
 
@@ -46,9 +46,7 @@ class Person:
         return (self.immunities & INFECTIONS) != 0
 
     def succeptibility_to(self, disease):
-        if disease.variant:
-            return 1.0 - max((self.cfg.IMMUNITIES[response].get(disease.variant, 0.0) for response in self.immunities), default=0.0)
-        return 0.0
+        return 1.0 - max((self.cfg.IMMUNITIES[response].get(disease.variant, 0.0) for response in self.immunities), default=0.0)
 
     def vaccinate_with(self, immune_response):
         assert immune_response in self.cfg.IMMUNITIES
@@ -66,9 +64,8 @@ class Person:
                 self.victims.add(other)
 
     def set_infected(self, disease, infector=None):
-        assert self.succeptibility_to(disease) > 0
-
-        self.immunities |= disease.variant
+        if disease.variant:
+            self.immunities |= disease.variant
         self.infectious = True
         self.disease = disease
         if infector:
@@ -107,11 +104,17 @@ class Person:
             self.recover()
 
     def chain(self):
+        """
+        Ideally, this chain() would return the shortest list from first infector. But ...
+        return list of infection ancestors with you at the bottom.
+        Ignore it if you are infected by a second or further person. This seems to eliminate circularities.
+        """
         assert self.infected, f"We cannot generate a chain for a person who has not been infected. {self}"
         chain = [self]
         m_inf = self
         while m_inf.infectors:
             m_inf = m_inf.infectors[0]
+            assert m_inf is not self
             chain.append(m_inf)
         chain.reverse()
         return chain
