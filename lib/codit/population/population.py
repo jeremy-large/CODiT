@@ -7,13 +7,13 @@ import numpy as np
 
 
 class Population:
-    def __init__(self, n_people, society, person_type=None):
-        person_type = person_type or Person
-        self.people = [person_type(society, config=society.cfg.__dict__, name=f"person {i}") for i in range(n_people)]
+    def __init__(self, n_people, society, person_type=Person):
+        self.person_type = person_type
+        self.people = [self.person_type(id, society, config=society.cfg.__dict__) for id in range(n_people)]
 
     def reset_people(self, society):
-        for person in self.people:
-            person.__init__(society, config=society.cfg.__dict__, name=person.name, home=person.home)
+        for p in self.people:
+            p.reset(society)
 
     def adopt_society(self, society):
         for person in self.people:
@@ -75,24 +75,31 @@ class Population:
         for p in self.people:
             p.update_time()
 
-    def victim_dict(self):
-        """
-        :return: a dictionary from infector to the tuple of people infected
-        """
-        return {person: person.victims for person in self.people if person.infected}
+    def chain(self, person):
+        assert person.covid_experiences, f"We cannot generate a chain for a person who has not been infected. {self}"
+        chain = [person.id]
+        m_inf = person
+        while m_inf.infectors:
+            first_id = m_inf.infectors[0]
+            m_inf = self.people[first_id]
+            chain.append(m_inf.id)
+        chain.reverse()
+        return chain
 
     def realized_r0(self, max_chain_len=4):
         """
-        :return: We look at early infectees only.
+        TODO: this is very slow and recalculates sections of the chain already generated.
+        :return: We look at early infectees only (ie the number of victims from the first chain)
         """
+
         n_victims = [len(person.victims) for person in self.people if
                      person.infectors and
-                     len(person.chain()) <= max_chain_len]
-        return np.mean(n_victims)
+                     len(self.chain(person)) <= max_chain_len]
 
+        return np.nanmean(n_victims) if n_victims else np.nan
 
 class FixedNetworkPopulation(Population):
-    def __init__(self, n_people, society, person_type=None):
+    def __init__(self, n_people, society, person_type=Person):
         Population.__init__(self, n_people, society, person_type=person_type)
         self.set_structure(society)
 

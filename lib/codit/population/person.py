@@ -1,30 +1,27 @@
 import random
-
 from codit.config import set_config
 from codit.immunity import ImmuneResponse, INFECTIONS
 
 class Person:
-    def __init__(self, society, config=None, name=None, home=None):
+    def __init__(self, id, society, config=None, home=None):
+        self.id = id
         set_config(self, config)
-
-        self.simplify_state()
-        self.adopt_society(society)
-
-        self.days_in_isolation = None
-        self.infectious = False
-        self.time_since_infection = 0
-
-        self.disease = None
-        self.name = name
-
-
-        self.immunities = ImmuneResponse(0)
+        self.reset(society)
 
         # Add home attribute for CityPopulation
         self.home = home
 
+    def reset(self, society):
+        self.days_in_isolation = None
+        self.infectious = False  # TODO: Make property  is not None and time_since_infection > DAYS_BEFORE_INFECTIOUS
+        self.time_since_infection = 0
+        self.disease = None
+        self.immunities = ImmuneResponse(0)
+        self.simplify_state()
+        self.adopt_society(society)
+
     def simplify_state(self):
-        self.infectors = [] # first infector
+        self.infectors = []  # first infector
         self.victims = set()
         self.society = None
 
@@ -33,13 +30,11 @@ class Person:
         self.episode_time = 1. / self.society.episodes_per_day
 
     def __repr__(self):
-        if self.name is None:
-            return f"Unnamed person"
-        return str(self.name)
+        return f"Person {id}"
 
     @property
     def symptomatic(self):
-        return self.infectious
+        return self.infectious  # TODO: Make property time_since_infection is not None and time_since_infection > DAYS_BEFORE_INFECTIOUS + DAYS_INFECTIOUS_TO_SYMPTOMS
 
     @property
     def infected(self):
@@ -57,19 +52,21 @@ class Person:
             self.infectious_attack(other, days)
 
     def infectious_attack(self, other, days):
+        assert other.id != self.id, "Can not attack self"
         succeptibility = other.succeptibility_to(self.disease)
         if succeptibility > 0:
             if random.random() < self.disease.pr_transmit_per_day * days * succeptibility:
                 other.set_infected(self.disease, infector=self)
-                self.victims.add(other)
+                self.victims.add(other.id)
 
     def set_infected(self, disease, infector=None):
         if disease.variant:
             self.immunities |= disease.variant
         self.infectious = True
         self.disease = disease
-        if infector:
-            self.infectors.append(infector)
+
+        if  self.infectors:
+            self.infectors.append(infector.id)
 
     def isolate(self):
         self.days_in_isolation = 0
@@ -102,19 +99,3 @@ class Person:
     def update_disease(self, days_since_infect):
         if days_since_infect >= self.disease.days_infectious:
             self.recover()
-
-    def chain(self):
-        """
-        Ideally, this chain() would return the shortest list from first infector. But ...
-        return list of infection ancestors with you at the bottom.
-        Ignore it if you are infected by a second or further person. This seems to eliminate circularities.
-        """
-        assert self.infected, f"We cannot generate a chain for a person who has not been infected. {self}"
-        chain = [self]
-        m_inf = self
-        while m_inf.infectors:
-            m_inf = m_inf.infectors[0]
-            assert m_inf is not self
-            chain.append(m_inf)
-        chain.reverse()
-        return chain

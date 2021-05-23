@@ -109,7 +109,7 @@ class VariantComponent:
         columns = ["time"]
         for v in INFECTIONS:
             columns.append(f"{v.name} infected")
-            columns.append(f"{v.name} infectous")
+            columns.append(f"{v.name} infectious")
         return columns
 
 
