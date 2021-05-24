@@ -75,26 +75,35 @@ class Population:
         for p in self.people:
             p.update_time()
 
-    def chain(self, person):
-        assert person.covid_experiences, f"We cannot generate a chain for a person who has not been infected. {self}"
-        chain = [person.id]
-        m_inf = person
-        while m_inf.infectors:
-            first_id = m_inf.infectors[0]
-            m_inf = self.people[first_id]
-            chain.append(m_inf.id)
-        chain.reverse()
+    def count_chain(self):
+        chain = {}
+
+        def recurse(id, done=set()):
+            if id in done:
+                return 0  # prevent infinite recursion following reinfections
+            done.add(id)
+            count = chain.get(id, 0)
+            if not count:
+                inf = self.people[id]
+                assert inf.infected, f"We cannot generate a chain for a person who has not been infected. {inf}"
+                if inf.infectors:
+                    first_id = inf.infectors[0]
+                    count = recurse(first_id, done)
+            count += 1
+            chain[id] = count
+            return count
+
+        for person in self.people:
+            if person.infectors:
+                recurse(person.id)
         return chain
 
     def realized_r0(self, max_chain_len=4):
         """
-        TODO: this is very slow and recalculates sections of the chain already generated.
         :return: We look at early infectees only (ie the number of victims from the first chain)
         """
-
-        n_victims = [len(person.victims) for person in self.people if
-                     person.infectors and
-                     len(self.chain(person)) <= max_chain_len]
+        n_victims = [len(self.people[id].victims) for id, count in self.count_chain().items()
+                      if count <= max_chain_len]
 
         return np.nanmean(n_victims) if n_victims else np.nan
 
@@ -134,3 +143,4 @@ class FixedNetworkPopulation(Population):
         """
         for grp in self.fixed_cliques:
             yield grp
+

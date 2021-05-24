@@ -65,7 +65,7 @@ class Person:
         self.infectious = True
         self.disease = disease
 
-        if  self.infectors:
+        if infector is not None:
             self.infectors.append(infector.id)
 
     def isolate(self):
