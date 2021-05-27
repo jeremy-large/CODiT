@@ -2,10 +2,11 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import geopandas as gpd
 
 from codit.outbreakvisualiser import VisualizerComponent
 from codit.disease import ifr, hospitalization
-
+from codit.population.networks.home_locations import DISTRICT_PARAMETERS
 
 class OutbreakRecorder:
     def __init__(self, o, show_heatmap=False):
@@ -104,6 +105,7 @@ class WardComponent:
         self.wards = list({p.home.ward for p in o.pop.people if p.home.ward.name})
         self.infected = []
         self.infectious = []
+        self.indian_variant = []
         self.positive_tests = []
         self.expected_death = []
         self.expected_hospitalization = []
@@ -113,9 +115,26 @@ class WardComponent:
         for ward in self.wards:
             self.people_of[ward] = [p for p in o.pop.people if p.home.ward == ward]
 
+        self.shapes = self.prepare_map_shapes()
+
+    def prepare_map_shapes(self):
+        pop_df = pd.read_csv(DISTRICT_PARAMETERS['Ward']['population_data_file'])
+        pop_df.set_index('wd20cd', inplace=True)
+        shapes = gpd.read_file(DISTRICT_PARAMETERS['Ward']['shape_file'])
+        shapes.set_index('wd20cd', inplace=True)
+        shapes = shapes.loc[pop_df.index]
+        shapes.set_index('wd20nm', inplace=True)
+        return shapes
+
     def update(self, o):
         self.infected.append([o.time] +
                              [sum([p.infected for p in self.people_of[w]]) / len(self.people_of[w]) for w in self.wards]
+                             )
+
+        self.indian_variant.append([o.time] +
+                             [len([p for p in self.people_of[w]
+                                   if p.disease and p.disease.name == 'B.1.617.2'])
+                              for w in self.wards]
                              )
 
         self.infectious.append([o.time] +
@@ -168,3 +187,20 @@ class WardComponent:
         order = np.argsort(df.iloc[:, -1:].values, axis=None)  # get the order of the last column
         df = df.iloc[np.flip(order)].T
         return df
+
+    def map_incidence(self, wardlevel_data, title='', end_date=False, per_hundred_k=False):
+        infect_over_time = self.dataframe(wardlevel_data)
+        incidence = infect_over_time.mean().T
+        if end_date:
+            incidence = infect_over_time.loc[infect_over_time.index[-1]]
+        incidence = pd.DataFrame(incidence)
+        incidence.columns = ['incidence']
+        if per_hundred_k:
+            incidence *= 100000
+        results = gpd.GeoDataFrame(pd.merge(incidence, self.shapes.geometry, right_index=True, left_index=True))
+        fig, ax = plt.subplots(1, 1)
+        ax.axes.get_yaxis().set_visible(False)
+        ax.axes.get_xaxis().set_visible(False)
+        results.plot(column='incidence', cmap='Purples', legend=True, ax=ax, edgecolor='black',
+                         legend_kwds={'label': "infectious individuals"})
+        _ = plt.title(title + '\ninfection rates across wards' + (" per 100,000" if per_hundred_k else ""))
