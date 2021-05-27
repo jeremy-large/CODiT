@@ -148,7 +148,7 @@ class WardComponent:
 
         self.indian_variant.append([o.time] +
                              [len([p for p in self.people_of[w]
-                                   if p.disease and p.disease.name == 'B.1.617.2'])
+                                   if p.disease and p.disease.variant == ImmuneResponse.B_1_617_2_INFECTION])
                               for w in self.wards]
                              )
 
