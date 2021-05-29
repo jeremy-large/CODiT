@@ -1,15 +1,15 @@
 import os
 
 from codit import share_dir
+from codit.immunity import ImmuneResponse
 
-DATA_PATH = os.path.join(share_dir(), 'codit', 'data')
-POPULATION_LSOA_CSV = os.path.join(DATA_PATH, 'city', 'population', 'sample_lsoa_population.csv.gz')
-
+DATA_PATH = share_dir() / "codit" / "data"
+POPULATION_LSOA_CSV = DATA_PATH / "city" / "population" / "sample_lsoa_population.csv.gz"
 
 class CFG:
 
     # Disease:
-    DEFAULT_COVID = "SARS-CoV-2"
+    DEFAULT_COVID = ImmuneResponse.SARS_CoV_2_INFECTION
     _TARGET_R0 = 1.4  # before Test and Trace and Isolation
 
     DAYS_BEFORE_INFECTIOUS = 4   # t0
@@ -26,12 +26,10 @@ class CFG:
     DURATION_OF_ISOLATION = 10   #tIsol
 
     # Society:
-    PROB_INFECT_IF_TOGETHER_ON_A_DAY = {'SARS-CoV-2': 0.025, 'B.1.1.7': 0.039, 'B.1.617.2': 0.039 * 1.4}
+    PROB_INFECT_IF_TOGETHER_ON_A_DAY = { ImmuneResponse.SARS_CoV_2_INFECTION: 0.025,
+                                         ImmuneResponse.B_1_1_7_INFECTION: 0.039,
+                                         ImmuneResponse.B_1_617_2_INFECTION: 0.039 * 1.4 }
     #  Tom Wenseleers: could be 60% more transmissible
-
-    X_IMMUNITY = 1.   # more realistic to put this down to 0.8
-
-
 
     # this is a moving target - because depends on hand-washing, masks ...
     # 'B.1.1.7' 56% more infectious than initial strain
@@ -46,34 +44,34 @@ class CFG:
     SIMULATOR_PERIODS_PER_DAY = 1
 
     MEAN_NETWORK_SIZE = 1 +_TARGET_R0 / (DAYS_INFECTIOUS_TO_SYMPTOMS + DAYS_OF_SYMPTOMS) / \
-                        PROB_INFECT_IF_TOGETHER_ON_A_DAY['SARS-CoV-2']
+                        PROB_INFECT_IF_TOGETHER_ON_A_DAY[ImmuneResponse.SARS_CoV_2_INFECTION]
     # the above formula, and the _TARGET_R0 concept, assumes that all people have identical network size
 
     _PROPORTION_OF_INFECTED_WHO_GET_TESTED = PROB_SYMPTOMATIC * \
                                              PROB_APPLY_FOR_TEST_IF_SYMPTOMS * \
                                              PROB_TEST_IF_REQUESTED   # should be 0.205
-    
-    @property
-    def __X_IMMUNITIES(self):
-        return {'SARS-CoV-2': self.X_IMMUNITY,
-                    'B.1.1.7': self.X_IMMUNITY,
-                    'B.1.617.2': self.X_IMMUNITY ** 2}
+
+
+    X_IMMUNITY = 1.   # more realistic to put this down to 0.8
 
     @property
-    def CROSS_IMMUNITY(self): 
-        return {'other': {'other': 1.},
-                      'SARS-CoV-2': self.__X_IMMUNITIES,
-                      'B.1.1.7': self.__X_IMMUNITIES,
-                      'B.1.617.2': {'SARS-CoV-2': self.X_IMMUNITY ** 2,
-                                    'B.1.1.7': self.X_IMMUNITY ** 2,
-                                    'B.1.617.2': self.X_IMMUNITY}}
-    # https://www.gov.uk/government/news/past-covid-19-infection-provides-some-immunity-but-people-may-still-carry-and-transmit-virus
-    
+    def DEFAULT_X_IMMUNITIES(self):
+        return { ImmuneResponse.SARS_CoV_2_INFECTION: self.X_IMMUNITY,
+                 ImmuneResponse.B_1_1_7_INFECTION: self.X_IMMUNITY,
+                 ImmuneResponse.B_1_617_2_INFECTION: self.X_IMMUNITY ** 2 }
+
     @property
-    def VACCINATION_IMMUNITY(self):
-        return {'AstraZeneca': self.__X_IMMUNITIES,
-                            'Pfizer': self.__X_IMMUNITIES,
-                            'Moderna': self.__X_IMMUNITIES}
+    def IMMUNITIES(self):
+        return { ImmuneResponse.SARS_CoV_2_INFECTION: self.DEFAULT_X_IMMUNITIES,
+                 ImmuneResponse.B_1_1_7_INFECTION: self.DEFAULT_X_IMMUNITIES,
+                 ImmuneResponse.B_1_617_2_INFECTION: { ImmuneResponse.SARS_CoV_2_INFECTION: self.X_IMMUNITY ** 2,
+                                                       ImmuneResponse.B_1_1_7_INFECTION: self.X_IMMUNITY ** 2,
+                                                       ImmuneResponse.B_1_617_2_INFECTION: self.X_IMMUNITY },
+                 ImmuneResponse.ASTRAZENECA_1ST_DOSE: self.DEFAULT_X_IMMUNITIES,
+                 ImmuneResponse.PFIZER_1ST_DOSE: self.DEFAULT_X_IMMUNITIES,
+                 ImmuneResponse.MODERNA_1ST_DOSE: self.DEFAULT_X_IMMUNITIES }
+
+    # https://www.gov.uk/government/news/past-covid-19-infection-provides-some-immunity-but-people-may-still-carry-and-transmit-virus
     # https://www.who.int/emergencies/diseases/novel-coronavirus-2019/covid-19-vaccines
     # https://www.gov.uk/government/news/one-dose-of-covid-19-vaccine-can-cut-household-transmission-by-up-to-half
     # https://twitter.com/JamesWard73/status/1388524356490440708        

@@ -93,3 +93,5 @@ def test_recorder_components():
     o = Outbreak(s, Covid(), pop_size=8, seed_size=1, n_days=ALL_TIME_DAYS, show_heatmap=True)
     o.recorder.add_component(VariantComponent())
     o.simulate()
+
+    o.recorder

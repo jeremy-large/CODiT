@@ -15,8 +15,8 @@ WITHIN_BUILDING_CONTACT = 0.75
 
 
 class CityPopulation(FixedNetworkPopulation):
-    def __init__(self, n_people, society, person_type=None, lockdown_config=None):
-        Population.__init__(self, n_people, society, person_type=person_type or PersonCovid)
+    def __init__(self, n_people, society, person_type=PersonCovid, lockdown_config=None):
+        Population.__init__(self, n_people, society, person_type=person_type)
         self.households, self.workplaces, self.classrooms, self.care_homes, self.buildings = build_city_structures(self.people)
         self.set_structure(society, lockdown_config=lockdown_config)
 

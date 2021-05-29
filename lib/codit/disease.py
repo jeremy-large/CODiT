@@ -39,14 +39,14 @@ def hospitalization(age):
     return ifr(age) * RECIPROCAL_OF_DEATH_GIVEN_HOSPITAL
 
 
-def set_infectivity(name, pr_transmission_per_day):
+def set_infectivity(variant, pr_transmission_per_day):
     """
     :param name:
     :param pr_transmission_per_day:
     :return: we're keen to handle two cases: pr_transmission_per_day is a float, and pr_transmission_per_day is a dict
     """
     if type(pr_transmission_per_day) == dict:
-        return pr_transmission_per_day[name]
+        return pr_transmission_per_day[variant]
     return pr_transmission_per_day
 
 
@@ -54,23 +54,22 @@ class Disease:
     """
     This is not a case of a disease, it is the strain of disease.
     """
-    def __init__(self, days_infectious, pr_transmission_per_day, name='other', config=None):
+    def __init__(self, days_infectious, pr_transmission_per_day, variant=None, config=None):
         set_config(self, config)
         self.days_infectious = days_infectious
-        self.pr_transmit_per_day = set_infectivity(name, pr_transmission_per_day)
-        self.name = name
+        self.pr_transmit_per_day = set_infectivity(variant, pr_transmission_per_day)
+        self.variant = variant
 
     def __repr__(self):
-        return self.name
-
+        return self.variant.name if self.variant else "None"
 
 class Covid(Disease):
-    def __init__(self, days_infectious=None, pr_transmission_per_day=None, name='', config=None):
+    def __init__(self, days_infectious=None, pr_transmission_per_day=None, variant=None, config=None):
         set_config(self, config)
         days_infectious = days_infectious or (self.cfg.DAYS_INFECTIOUS_TO_SYMPTOMS + self.cfg.DAYS_OF_SYMPTOMS)
         pr_transmission_per_day = pr_transmission_per_day or self.cfg.PROB_INFECT_IF_TOGETHER_ON_A_DAY
-        name = name or self.cfg.DEFAULT_COVID
-        Disease.__init__(self, days_infectious, pr_transmission_per_day, name)
+        variant = variant or self.cfg.DEFAULT_COVID
+        Disease.__init__(self, days_infectious, pr_transmission_per_day, variant)
         self.days_before_infectious = self.cfg.DAYS_BEFORE_INFECTIOUS
         self.days_to_symptoms = self.cfg.DAYS_INFECTIOUS_TO_SYMPTOMS
         self.prob_symptomatic = self.cfg.PROB_SYMPTOMATIC

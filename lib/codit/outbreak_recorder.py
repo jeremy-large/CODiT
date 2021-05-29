@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -6,6 +7,9 @@ import geopandas as gpd
 
 from codit.outbreakvisualiser import VisualizerComponent
 from codit.disease import ifr, hospitalization
+
+from codit.immunity import ImmuneResponse, INFECTIONS
+
 from codit.population.networks.home_locations import DISTRICT_PARAMETERS
 
 class OutbreakRecorder:
@@ -93,11 +97,22 @@ class VariantComponent:
         self.story = []
 
     def update(self, o):
-        variants = list({d for p in o.pop.people for d in p.covid_experiences})
-        self.story.append([o.time,
-                           variants,
-                           [o.pop.count_infected(d) for d in variants],
-                           [o.pop.count_infectious(d) for d in variants]])
+        # count the cases of each variant in the population
+        infected_variants = defaultdict(lambda: 0)
+        infectious_variants = defaultdict(lambda: 0)
+        row = [o.time]
+        for v in INFECTIONS:
+            row.append(o.pop.count_infected(v))
+            row.append(o.pop.count_infectious(v))
+        self.story.append(row)
+
+    def columns(self):
+        """Get the column for each row in the story"""
+        columns = ["time"]
+        for v in INFECTIONS:
+            columns.append(f"{v.name} infected")
+            columns.append(f"{v.name} infectious")
+        return columns
 
 
 class WardComponent:
@@ -133,7 +148,7 @@ class WardComponent:
 
         self.indian_variant.append([o.time] +
                              [len([p for p in self.people_of[w]
-                                   if p.disease and p.disease.name == 'B.1.617.2'])
+                                   if p.disease and p.disease.variant == ImmuneResponse.B_1_617_2_INFECTION])
                               for w in self.wards]
                              )
 

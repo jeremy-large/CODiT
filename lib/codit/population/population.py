@@ -7,13 +7,13 @@ import numpy as np
 
 
 class Population:
-    def __init__(self, n_people, society, person_type=None):
-        person_type = person_type or Person
-        self.people = [person_type(society, config=society.cfg.__dict__, name=f"person {i}") for i in range(n_people)]
+    def __init__(self, n_people, society, person_type=Person):
+        self.person_type = person_type
+        self.people = [self.person_type(id, society, config=society.cfg.__dict__) for id in range(n_people)]
 
     def reset_people(self, society):
-        for person in self.people:
-            person.__init__(society, config=society.cfg.__dict__, name=person.name, home=person.home)
+        for p in self.people:
+            p.reset(society)
 
     def adopt_society(self, society):
         for person in self.people:
@@ -42,37 +42,57 @@ class Population:
     def seed_infections(self, n_infected, diseases, seed_periods=None):
         seed_infection(n_infected, self.people, diseases, seed_periods=seed_periods)
 
-    def count_infectious(self, disease=None):
-        infected = self.infected(disease)
-        return sum(p.infectious for p in infected)
+    def count_infectious(self, variant=None):
+        return sum(p.infectious for p in self.infected(variant))
 
-    def count_infected(self, disease=None):
-        return len(self.infected(disease))
+    def count_infected(self, variant=None):
+        return sum(1 for p in self.infected(variant))
 
-    def infected(self, disease=None):
-        if disease is None:
-            return [p for p in self.people if p.covid_experiences]
-        return [p for p in self.people if disease in p.covid_experiences]
+    def infected(self, variant=None):
+        if variant:
+            for p in self.people:
+                if variant in p.immunities:
+                    yield p
+        else:
+            for p in self.people:
+                if p.infected:
+                    yield p
 
     def update_time(self):
         for p in self.people:
             p.update_time()
 
-    def victim_dict(self):
-        """
-        :return: a dictionary from infector to the tuple of people infected
-        """
-        return {person: person.victims for person in self.people if person.infected}
+    def count_chain(self):
+        chain = {}
+
+        def recurse(id, done=set()):
+            if id in done:
+                return 0  # prevent infinite recursion following reinfections
+            done.add(id)
+            count = chain.get(id, 0)
+            if not count:
+                inf = self.people[id]
+                assert inf.infected, f"We cannot generate a chain for a person who has not been infected. {inf}"
+                if inf.infectors:
+                    first_id = inf.infectors[0]
+                    count = recurse(first_id, done)
+            count += 1
+            chain[id] = count
+            return count
+
+        for person in self.people:
+            if person.infectors:
+                recurse(person.id)
+        return chain
 
     def realized_r0(self, max_chain_len=4):
         """
-        :return: We look at early infectees only.
+        :return: We look at early infectees only (ie the number of victims from the first chain)
         """
-        n_victims = [len(person.victims) for person in self.people if
-                     person.infectors and
-                     len(person.chain()) <= max_chain_len]
-        return np.mean(n_victims)
+        n_victims = [len(self.people[id].victims) for id, count in self.count_chain().items()
+                      if count <= max_chain_len]
 
+        return np.nanmean(n_victims) if n_victims else np.nan
 
 def seed_infection(n_infected, people, diseases, seed_periods=None):
     if type(diseases) is not set:
@@ -91,7 +111,7 @@ def seed_infection(n_infected, people, diseases, seed_periods=None):
 
 
 class FixedNetworkPopulation(Population):
-    def __init__(self, n_people, society, person_type=None):
+    def __init__(self, n_people, society, person_type=Person):
         Population.__init__(self, n_people, society, person_type=person_type)
         self.set_structure(society)
 
