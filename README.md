@@ -28,19 +28,20 @@ We now provide a little more detail on the Model.
 ### Model
 This is the first of the three components provided in this codebase. It consists of:
 
-1.	A model [population](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L13), 
-potentially stratified by age, gender and C19 risk, who
-a.	experience [relevant symptoms](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/covid.py#L37) 
-due both to C19 and to non-C19, and 
-b.	[pass-on C19 to contacts](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/person.py#L38) on a realistic timescale.
+1. A model [population](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L17), 
+stratified by age, who
+a. experience [relevant symptoms](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/covid.py#L39) 
+due to the wild C19, its variants, and to non-C19, and 
+b. [pass-on C19 to contacts](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/person.py#L78) on a realistic timescale.
 
-2.	A network of physical contacts in the region at a point in time
-a.	[Household structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city_config/typical_households.py#L8)
-b.	[Study- / work-place structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L123)
-c.  [School classroom structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L73))
-d.  [Care home structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L44)
-e.	[Ephemeral contact](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L22)
-f.  ...
+2. A network of physical contacts in the region at a point in time
+a. [Household structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city_config/typical_households.py#L8)
+b. [Study- / work-place structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L123)
+c. [School classroom structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L156)
+d. [Care home structure](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L118)
+e. [Ephemeral contact](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L34)
+f. [Residential buildings/blocks](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/population/networks/city.py#L38)
+g. ...
 
 3.	Estimates of compliance by the public with health measures such as the current Test/Trace/Isolate system, 
 built around a [scaffold of interpretable parameters](https://github.com/jeremy-large/CODiT/blob/master/lib/codit/config.py)

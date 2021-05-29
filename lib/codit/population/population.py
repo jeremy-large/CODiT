@@ -40,20 +40,7 @@ class Population:
         return (random.sample(self.people, group_size) for _ in range(len(self.people)))
 
     def seed_infections(self, n_infected, diseases, seed_periods=None):
-        if type(diseases) is not set:
-            diseases = {diseases}
-        if type(n_infected) is not dict:
-            assert type(n_infected) == int
-            n_infected = {str(d): n_infected for d in diseases}
-        for d in diseases:
-            seed_periods = seed_periods or d.days_infectious
-            succeptibles = [p for p in self.people if p.succeptibility_to(d) > 0]
-            if succeptibles:
-                for p in random.sample(succeptibles, n_infected[str(d)]):
-                    p.set_infected(d)
-                    stage = random.random() * seed_periods
-                    while p.disease and p.days_infected() < stage:
-                        p.update_time()
+        seed_infection(n_infected, self.people, diseases, seed_periods=seed_periods)
 
     def count_infectious(self, variant=None):
         return sum(p.infectious for p in self.infected(variant))
@@ -107,6 +94,22 @@ class Population:
 
         return np.nanmean(n_victims) if n_victims else np.nan
 
+def seed_infection(n_infected, people, diseases, seed_periods=None):
+    if type(diseases) is not set:
+        diseases = {diseases}
+    if type(n_infected) is not dict:
+        assert type(n_infected) == int
+        n_infected = {str(d): n_infected for d in diseases}
+    for d in diseases:
+        seed_periods = seed_periods or d.days_infectious
+        succeptibles = [p for p in people if p.succeptibility_to(d) > 0]
+        for p in random.sample(succeptibles, n_infected[str(d)]):
+            p.set_infected(d)
+            stage = random.random() * seed_periods
+            while p.disease and p.days_infected() < stage:
+                p.update_time()
+
+
 class FixedNetworkPopulation(Population):
     def __init__(self, n_people, society, person_type=Person):
         Population.__init__(self, n_people, society, person_type=person_type)
@@ -143,4 +146,3 @@ class FixedNetworkPopulation(Population):
         """
         for grp in self.fixed_cliques:
             yield grp
-
