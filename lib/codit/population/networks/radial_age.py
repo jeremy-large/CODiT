@@ -40,4 +40,4 @@ def build_clique(location, radius, people, people_coordinates, max_group_size, p
     diffs = people_coordinates[cidx] - location
     distances = np.sum(diffs ** 2, axis=1)
     candidates = (people[ix] for ix in cidx)
-    return set([p for i, p in enumerate(candidates) if distances[i] < radius ** 2])
+    return set([p.name for i, p in enumerate(candidates) if distances[i] < radius ** 2])

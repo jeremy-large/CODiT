@@ -33,7 +33,7 @@ def build_cliques(people):
 
     logging.info("Composing households and workplaces")
     full_graph = nx.compose_all([households, workplaces])
-    return [set(x) for x in nx.find_cliques(full_graph)]
+    return [{p.name for p in x} for x in nx.find_cliques(full_graph)]
 
 
 def get_shuffle_mapping(people):

@@ -6,8 +6,8 @@ from codit.population.person import Person
 
 class PersonCovid(Person):
     # Add home parameter
-    def __init__(self, society, config=None, name=None, home=None):
-        Person.__init__(self, society, config=config, name=name, home=home)
+    def __init__(self, name, society, config=None, home=None):
+        Person.__init__(self, name, society, config=config, home=home)
         self._symptomatic = False
         self.has_tested_positive = False
 

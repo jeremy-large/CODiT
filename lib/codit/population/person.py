@@ -12,7 +12,7 @@ class Isolation:
 
 
 class Person:
-    def __init__(self, society, config=None, name=None, home=None):
+    def __init__(self, name, society, config=None, home=None):
         set_config(self, config)
 
         self.simplify_state()
