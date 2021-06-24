@@ -32,7 +32,8 @@ class Person:
 
     def simplify_state(self):
         self.infectors = []
-        self.victims = set()
+        self.chain_length = None
+        self.victims = []
         self.society = None
 
     def adopt_society(self, society):
@@ -42,7 +43,7 @@ class Person:
     def __repr__(self):
         if self.name is None:
             return f"Unnamed person"
-        return str(self.name)
+        return f"person {self.name}"
 
     @property
     def symptomatic(self):
@@ -84,7 +85,7 @@ class Person:
         if succeptibility > 0:
             if random.random() < self.disease.pr_transmit_per_day * days * succeptibility:
                 other.set_infected(self.disease, infector=self)
-                self.victims.add(other)
+                self.victims.append(other.name)
 
     def set_infected(self, disease, infector=None):
         assert self.succeptibility_to(disease) > 0
@@ -92,8 +93,10 @@ class Person:
         self.update_immunities()
         self.infectious = True
         self.disease = disease
+        self.chain_length = 1
         if infector:
-            self.infectors.append(infector)
+            self.chain_length = infector.chain_length + 1
+            self.infectors.append(infector.name)
 
     def isolate(self):
         if self.isolation is None:
@@ -135,12 +138,19 @@ class Person:
         if days_since_infect == self.disease.days_infectious:
             self.recover()
 
-    def chain(self):
+    def contact_persons(self, census):
+        return [census[c] for c in self.contacts]
+
+    def chain(self, census):
+        """
+        :param census: a population.census()
+        :return:
+        """
         assert self.covid_experiences, f"We cannot generate a chain for a person who has not been infected. {self}"
         chain = [self]
         m_inf = self
         while m_inf.infectors:
-            m_inf = m_inf.infectors[0]
+            m_inf = census[m_inf.infectors[0]]
             chain.append(m_inf)
         chain.reverse()
         return chain
