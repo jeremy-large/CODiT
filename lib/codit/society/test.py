@@ -3,18 +3,17 @@ from collections import defaultdict
 import random
 
 class Test:
-    def __init__(self, person, notes, time_to_complete, days_delayed_start=0, census=None):
+    def __init__(self, person, notes, time_to_complete, days_delayed_start=0):
         self.days_elapsed = 0
         self.person = person
         self.positive = None
         self.days_to_complete = time_to_complete + days_delayed_start
         self.notes = notes
         self.days_delayed_start = days_delayed_start
-        if census:
-            targets = [q for q in person.contacts if not q.immunities]
-            self._succeptible_contacts = len(targets)
-            self._succeptible_contacts_of_contacts = \
-                len([s for v in targets for s in v.contacts if not s.immunities])
+        targets = [q for q in person.contacts if not q.immunities]
+        self._succeptible_contacts = len(targets)
+        self._succeptible_contacts_of_contacts = \
+            len([s for v in targets for s in v.contacts if not s.immunities])
         self._days_infected = person.days_infected() if person.disease else None
         self._isolating = person.isolating
         self._disease = str(person.disease or 'None')
