@@ -53,7 +53,6 @@ def test_two_track_hw_society():
 
 def test_two_track_city_society():
     random.seed(42)
-
     o = Outbreak(LateralFlowUK(config=dict(SIMULATOR_PERIODS_PER_DAY=4, DAILY_TEST_CAPACITY_PER_HEAD=1)), Covid(),
                  pop_size=8000, seed_size=8000//80, n_days=150,
                  population_type=CityPopulation)
