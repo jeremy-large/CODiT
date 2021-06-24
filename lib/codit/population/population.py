@@ -66,7 +66,7 @@ class Population:
         """
         return {person: [self.census[v] for v in person.victims] for person in self.people if person.infected}
 
-    def realized_r0(self, max_chain_len=4):
+    def realized_r0(self, max_chain_len=3):
         """
         :return: We look at early infectees only.
         """
