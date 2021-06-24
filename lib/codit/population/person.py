@@ -33,7 +33,7 @@ class Person:
     def simplify_state(self):
         self.infectors = []
         self.chain_length = None
-        self.victims = []
+        self.victims = set()
         self.society = None
 
     def adopt_society(self, society):
@@ -85,7 +85,7 @@ class Person:
         if succeptibility > 0:
             if random.random() < self.disease.pr_transmit_per_day * days * succeptibility:
                 other.set_infected(self.disease, infector=self)
-                self.victims.append(other.name)
+                self.victims.add(other.name)
 
     def set_infected(self, disease, infector=None):
         assert self.succeptibility_to(disease) > 0
