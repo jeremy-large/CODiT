@@ -9,8 +9,8 @@ import numpy as np
 class Population:
     def __init__(self, n_people, society, person_type=None):
         person_type = person_type or Person
-        self.people = [person_type(id, society, config=society.cfg.__dict__) for id in range(n_people)]
-        self.census = self.build_census()
+        self.census = {id: person_type(id, society, config=society.cfg.__dict__) for id in range(n_people)}
+        self.people = self.census.values()
 
     def reset_people(self, society):
         for person in self.people:
@@ -74,15 +74,6 @@ class Population:
                      person.infectors and
                      person.chain_length <= max_chain_len]
         return np.mean(n_victims)
-
-    def build_census(self):
-        census = dict()
-        for p in self.people:
-            if p.name in census:
-                raise ValueError(f"Cannot create census: the people in this population "
-                                 f"do not have unique names, e.g. {p.name}")
-            census.update({p.name: p})
-        return census
 
 
 def seed_infection(n_infected, people, diseases, seed_periods=None):

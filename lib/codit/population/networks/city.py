@@ -17,7 +17,7 @@ WITHIN_BUILDING_CONTACT = 0.75
 class CityPopulation(FixedNetworkPopulation):
     def __init__(self, n_people, society, person_type=None, lockdown_config=None):
         Population.__init__(self, n_people, society, person_type=person_type or PersonCovid)
-        self.households, self.workplaces, self.classrooms, self.care_homes, self.buildings = build_city_structures(self.people, self.census)
+        self.households, self.workplaces, self.classrooms, self.care_homes, self.buildings = build_city_structures(self.census)
         self.set_structure(society, lockdown_config=lockdown_config)
 
     def fix_cliques(self, encounter_size, group_size=None, lockdown_config=None):
@@ -94,7 +94,7 @@ def report_lockdown(income_decile, lockdown_factor, name, open_workplaces):
                  f"{np.mean(workplace_deciles):2.2f} (and st dev {np.std(workplace_deciles):2.2f}).")
 
 
-def build_city_structures(people, census, schools_by_ward=True):
+def build_city_structures(census, schools_by_ward=True):
     """
     :param people: a list of population.covid.PersonCovid() objects
     :param schools_by_ward: bool. If True, then school classrooms will contain only children of the same ward
@@ -103,6 +103,7 @@ def build_city_structures(people, census, schools_by_ward=True):
     for example: [{person_0, person_1, person_2}, {person_0, person_10, person_54, person_88, person_550, person_270}]
     - except not everyone is accounted for of course
     """
+    people = list(census.values())
     households = build_households(people)
     report_size(households, 'households')
 

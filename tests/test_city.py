@@ -33,8 +33,9 @@ def test_classroom_age():
      - (3) Ages of students in classroom must all be equal
     """
     pop = setup_population()
-    setup_households(pop.people)
-    classrooms = build_class_groups(pop.people)
+    people = list(pop.people)
+    setup_households(people)
+    classrooms = build_class_groups(people)
     ages = [pop.census[s].age for room in classrooms for s in room]
 
     assert min(ages) == cfg.MINIMUM_CLASS_AGE
@@ -47,7 +48,8 @@ def test_care_homes():
      - (1) MIN care home age must be MAXIMUM_WORKING_AGE
     """
     pop = setup_population()
-    houses = build_households(pop.people)
+    people = list(pop.people)
+    houses = build_households(people)
     care_homes = [h for h in houses if is_care_home(h, pop.census)]
     ages = [pop.census[s].age for room in care_homes for s in room]
 

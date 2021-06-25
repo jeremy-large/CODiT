@@ -8,10 +8,11 @@ from codit.population import FixedNetworkPopulation
 class RadialAgePopulation(FixedNetworkPopulation):
 
     def fix_cliques(self, mean_num_contacts, group_size=2, radius=15, max_group_size=40, max_age=80):
-        return build_cliques(self.people, max_age, radius, max_group_size, mean_num_contacts)
+        return build_cliques(self.census, max_age, radius, max_group_size, mean_num_contacts)
 
 
-def build_cliques(people, max_age, radius, max_group_size, mean_num_contacts):
+def build_cliques(census, max_age, radius, max_group_size, mean_num_contacts):
+    people = list(census.values())
     n_people = len(people)
     coord = locate_population(people)
     groups = []
