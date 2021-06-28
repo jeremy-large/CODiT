@@ -96,7 +96,7 @@ def report_lockdown(income_decile, lockdown_factor, name, open_workplaces):
 
 def build_city_structures(census, schools_by_ward=True):
     """
-    :param people: a list of population.covid.PersonCovid() objects
+    :param census: a lookup of population.covid.PersonCovid() objects, by id/name
     :param schools_by_ward: bool. If True, then school classrooms will contain only children of the same ward
     :return: a list of little sets, each is a 'clique' in the graph, some are households, some are workplaces
     each individual should belong to exactly one household and one workplace
@@ -129,6 +129,11 @@ def build_city_structures(census, schools_by_ward=True):
 
 
 def is_care_home(home, census):
+    """
+    :param home: a set of poeple in a home
+    :param census: a lookup of population.covid.PersonCovid() objects, by id/name
+    :return: boolean, whether this home is a carehome
+    """
     return min([census[p].age for p in home]) >= MAXIMUM_WORKING_AGE and len(home) > 20
 
 
@@ -176,7 +181,7 @@ def build_buildings(people):
 def build_households(people):
     """
     :param people: a list of population.covid.PersonCovid() objects
-    :return: a list of households, where households are a list of person objects. now with an assigned age.
+    :return: a list of households, where households are a list of person's names. Also assigns ages to people.
     """
     n_individuals = len(people)
     assigned = 0
@@ -223,7 +228,7 @@ def build_workplaces(people, force_size=None):
     """
     :param people: lets for now let these be a list of N population.covid.PersonCovid() objects
     :param force_size: specify number of participants
-    :return: a list of workplaces, where workplaces are a list of person objects.
+    :return: a list of workplaces, where workplaces are a list of person's names/ids.
     """
     n_individuals = len(people)
     assigned = 0

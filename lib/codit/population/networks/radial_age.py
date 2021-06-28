@@ -12,6 +12,9 @@ class RadialAgePopulation(FixedNetworkPopulation):
 
 
 def build_cliques(census, max_age, radius, max_group_size, mean_num_contacts):
+    """
+    :param census: a lookup of population.covid.PersonCovid() objects, by id/name
+    """
     people = list(census.values())
     n_people = len(people)
     coord = locate_population(people)
