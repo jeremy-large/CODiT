@@ -12,7 +12,7 @@ class Isolation:
 
 
 class Person:
-    def __init__(self, name, society, config=None, home=None):
+    def __init__(self, name, config=None, home=None):
         set_config(self, config)
 
         self.isolation = None
@@ -26,7 +26,6 @@ class Person:
         self.home = home
 
         self.simplify_state()
-        self.adopt_society(society)
         self.update_immunities()
 
     def simplify_state(self):

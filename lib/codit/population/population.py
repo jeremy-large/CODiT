@@ -9,12 +9,13 @@ import numpy as np
 class Population:
     def __init__(self, n_people, society, person_type=None):
         person_type = person_type or Person
-        self.census = {id: person_type(id, society, config=society.cfg.__dict__) for id in range(n_people)}
+        self.census = {id: person_type(id, config=society.cfg.__dict__) for id in range(n_people)}
         self.people = self.census.values()
+        self.adopt_society(society)
 
     def reset_people(self, society):
         for person in self.people:
-            person.__init__(person.name, society, config=society.cfg.__dict__, home=person.home)
+            person.__init__(person.name, config=society.cfg.__dict__, home=person.home)
 
     def adopt_society(self, society):
         society.census = self.census
