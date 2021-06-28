@@ -14,8 +14,7 @@ POP_SIZE = 23000
 
 
 def setup_population():
-    people = Population(POP_SIZE, UKSociety())
-    return people.people
+    return Population(POP_SIZE, UKSociety())
 
 
 def setup_households(people):
@@ -24,7 +23,7 @@ def setup_households(people):
 
 def test_pop():
     pop = setup_population()
-    assert len(pop) == POP_SIZE
+    assert len(pop.people) == POP_SIZE
 
 
 def test_classroom_age():
@@ -33,24 +32,26 @@ def test_classroom_age():
      - (2) MAX class age must be MAXIMUM_CLASS_AGE
      - (3) Ages of students in classroom must all be equal
     """
-    people = setup_population()
+    pop = setup_population()
+    people = list(pop.people)
     setup_households(people)
     classrooms = build_class_groups(people)
-    ages = [s.age for room in classrooms for s in room]
+    ages = [pop.census[s].age for room in classrooms for s in room]
 
     assert min(ages) == cfg.MINIMUM_CLASS_AGE
     assert max(ages) == cfg.MAXIMUM_CLASS_AGE
-    assert all(p.age == cfg.MINIMUM_CLASS_AGE for p in classrooms[0])
+    assert all(pop.census[p].age == cfg.MINIMUM_CLASS_AGE for p in classrooms[0])
 
 
 def test_care_homes():
     """
      - (1) MIN care home age must be MAXIMUM_WORKING_AGE
     """
-    people = setup_population()
+    pop = setup_population()
+    people = list(pop.people)
     houses = build_households(people)
-    care_homes = [h for h in houses if is_care_home(h)]
-    ages = [s.age for room in care_homes for s in room]
+    care_homes = [h for h in houses if is_care_home(h, pop.census)]
+    ages = [pop.census[s].age for room in care_homes for s in room]
 
     assert min(ages) == cfg.MAXIMUM_WORKING_AGE
 

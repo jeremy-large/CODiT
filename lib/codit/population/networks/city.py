@@ -17,7 +17,7 @@ WITHIN_BUILDING_CONTACT = 0.75
 class CityPopulation(FixedNetworkPopulation):
     def __init__(self, n_people, society, person_type=None, lockdown_config=None):
         Population.__init__(self, n_people, society, person_type=person_type or PersonCovid)
-        self.households, self.workplaces, self.classrooms, self.care_homes, self.buildings = build_city_structures(self.people)
+        self.households, self.workplaces, self.classrooms, self.care_homes, self.buildings = build_city_structures(self.census)
         self.set_structure(society, lockdown_config=lockdown_config)
 
     def fix_cliques(self, encounter_size, group_size=None, lockdown_config=None):
@@ -36,6 +36,7 @@ class CityPopulation(FixedNetworkPopulation):
 
         building_cliques = []
         for b in self.buildings:
+            b = (self.census[p] for p in b)
             building_cliques.extend(FixedNetworkPopulation.fix_cliques(self, WITHIN_BUILDING_CONTACT, people=b))
         logging.info(f"Adding {len(building_cliques)} contacts each within one of the {len(self.buildings)} buildings "
                      f"(contact density of {WITHIN_BUILDING_CONTACT})")
@@ -44,23 +45,23 @@ class CityPopulation(FixedNetworkPopulation):
 
     def build_city_cliques(self, lockdown_config, by_deprivation=True):
 
-        workplaces = _suppress(self.workplaces, 'workplaces', lockdown_config['workplaces'],
+        workplaces = _suppress(self.workplaces, 'workplaces', lockdown_config['workplaces'], self.census,
                                by_deprivation=by_deprivation)
 
-        classrooms = _suppress(self.classrooms, 'classrooms', lockdown_config['classrooms'],
+        classrooms = _suppress(self.classrooms, 'classrooms', lockdown_config['classrooms'], self.census,
                                by_deprivation=by_deprivation)
 
         return self.households + workplaces + classrooms + self.care_homes
 
 
-def _suppress(workplaces, name, lockdown_factor, by_deprivation=True):
+def _suppress(workplaces, name, lockdown_factor, census, by_deprivation=True):
 
     def income_decile(p):
         """
         :param p: person
         :return: a float from most deprived to least in [1., 2., 3., 4., 5., 6., 7., 8., 9., 10.]
         """
-        return p.home.lsoa.features['Income_Decile']
+        return census[p].home.lsoa.features['Income_Decile']
 
     def _dep(people):
         # :return: the mean decile of the people, transformed linearly to lie between -1 and 1.
@@ -93,15 +94,16 @@ def report_lockdown(income_decile, lockdown_factor, name, open_workplaces):
                  f"{np.mean(workplace_deciles):2.2f} (and st dev {np.std(workplace_deciles):2.2f}).")
 
 
-def build_city_structures(people, schools_by_ward=True):
+def build_city_structures(census, schools_by_ward=True):
     """
-    :param people: a list of population.covid.PersonCovid() objects
+    :param census: a lookup of population.covid.PersonCovid() objects, by id/name
     :param schools_by_ward: bool. If True, then school classrooms will contain only children of the same ward
     :return: a list of little sets, each is a 'clique' in the graph, some are households, some are workplaces
     each individual should belong to exactly one household and one workplace
     for example: [{person_0, person_1, person_2}, {person_0, person_10, person_54, person_88, person_550, person_270}]
     - except not everyone is accounted for of course
     """
+    people = list(census.values())
     households = build_households(people)
     report_size(households, 'households')
 
@@ -112,10 +114,10 @@ def build_city_structures(people, schools_by_ward=True):
 
     working_age_people = [p for p in people if MINIMUM_WORKING_AGE < p.age < MAXIMUM_WORKING_AGE]
     teachers = random.sample(working_age_people, len(classrooms))
-    classrooms = [clss | {teachers[i]} for i, clss in enumerate(classrooms)]
+    classrooms = [clss | {teachers[i].name} for i, clss in enumerate(classrooms)]
     report_size(classrooms, 'classrooms')
 
-    care_homes = [h for h in households if is_care_home(h)]
+    care_homes = [h for h in households if is_care_home(h, census)]
     carers = assign_staff(care_homes, working_age_people)
 
     working_age_people = list(set(working_age_people) - set(teachers) - set(carers))
@@ -126,15 +128,20 @@ def build_city_structures(people, schools_by_ward=True):
     return households, workplaces, classrooms, care_homes, buildings
 
 
-def is_care_home(home):
-    return min([p.age for p in home]) >= MAXIMUM_WORKING_AGE and len(home) > 20
+def is_care_home(home, census):
+    """
+    :param home: a set of poeple in a home
+    :param census: a lookup of population.covid.PersonCovid() objects, by id/name
+    :return: boolean, whether this home is a carehome
+    """
+    return min([census[p].age for p in home]) >= MAXIMUM_WORKING_AGE and len(home) > 20
 
 
 def assign_staff(care_homes, working_age_people, staff=5):
     carers = set()
     for home in care_homes:
         home_carers = set(random.sample(working_age_people, staff))
-        home |= home_carers
+        home |= {c.name for c in home_carers}
         carers |= home_carers
     report_size(care_homes, 'care_homes')
     return carers
@@ -167,14 +174,14 @@ def build_classes_by_ward(people, class_size=30):
 def build_buildings(people):
     bdngs = defaultdict(list)
     for p in people:
-        bdngs[p.home.building].append(p)
+        bdngs[p.home.building].append(p.name)
     return list(bdngs.values())
 
 
 def build_households(people):
     """
     :param people: a list of population.covid.PersonCovid() objects
-    :return: a list of households, where households are a list of person objects. now with an assigned age.
+    :return: a list of households, where households are a list of person's names. Also assigns ages to people.
     """
     n_individuals = len(people)
     assigned = 0
@@ -201,7 +208,7 @@ def build_households(people):
             indiv.age = age
             indiv.home = home
 
-            hh.append(indiv)
+            hh.append(indiv.name)
         households.append(set(hh))
         assigned += size
 
@@ -221,7 +228,7 @@ def build_workplaces(people, force_size=None):
     """
     :param people: lets for now let these be a list of N population.covid.PersonCovid() objects
     :param force_size: specify number of participants
-    :return: a list of workplaces, where workplaces are a list of person objects.
+    :return: a list of workplaces, where workplaces are a list of person's names/ids.
     """
     n_individuals = len(people)
     assigned = 0
@@ -236,7 +243,7 @@ def build_workplaces(people, force_size=None):
         assert size > 0
 
         hh = people[assigned: assigned + size]
-        workplaces.append(set(hh))
+        workplaces.append({p.name for p in hh})
         assigned += size
 
     return workplaces

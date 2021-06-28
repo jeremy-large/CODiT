@@ -12,11 +12,8 @@ class Isolation:
 
 
 class Person:
-    def __init__(self, society, config=None, name=None, home=None):
+    def __init__(self, name, society, config=None, home=None):
         set_config(self, config)
-
-        self.simplify_state()
-        self.adopt_society(society)
 
         self.isolation = None
         self.infectious = False
@@ -26,13 +23,15 @@ class Person:
 
         self.covid_experiences = []
         self.vaccinations = []
-        self.update_immunities()
-        # Add home attribute for CityPopulation
         self.home = home
+
+        self.simplify_state()
+        self.adopt_society(society)
+        self.update_immunities()
 
     def simplify_state(self):
         self.infectors = []
-        self.chain_length = None
+        self.chain_length = 0
         self.victims = set()
         self.society = None
 
@@ -93,7 +92,6 @@ class Person:
         self.update_immunities()
         self.infectious = True
         self.disease = disease
-        self.chain_length = 1
         if infector:
             self.chain_length = infector.chain_length + 1
             self.infectors.append(infector.name)

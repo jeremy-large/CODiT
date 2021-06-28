@@ -17,11 +17,11 @@ WORKPLACE_SIZE_REPRESENTATIVE_EXAMPLES = _h
 
 class HouseholdWorkplacePopulation(FixedNetworkPopulation):
     def fix_cliques(self, mean_num_contacts, mean_household_size=2):
-        return build_cliques(self.people)
+        return build_cliques(self.census)
 
 
-def build_cliques(people):
-
+def build_cliques(census):
+    people = list(census.values())
     logging.info("Building households")
     household_graph = partition_graph(len(people), HOUSEHOLD_SIZES_OF_REPRESENTATIVE_PEOPLE, 1, 0)
     node_mapping = {i: people[i] for i in range(len(people))}
@@ -33,7 +33,7 @@ def build_cliques(people):
 
     logging.info("Composing households and workplaces")
     full_graph = nx.compose_all([households, workplaces])
-    return [set(x) for x in nx.find_cliques(full_graph)]
+    return [{p.name for p in x} for x in nx.find_cliques(full_graph)]
 
 
 def get_shuffle_mapping(people):

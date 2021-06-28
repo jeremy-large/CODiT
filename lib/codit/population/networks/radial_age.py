@@ -8,10 +8,14 @@ from codit.population import FixedNetworkPopulation
 class RadialAgePopulation(FixedNetworkPopulation):
 
     def fix_cliques(self, mean_num_contacts, group_size=2, radius=15, max_group_size=40, max_age=80):
-        return build_cliques(self.people, max_age, radius, max_group_size, mean_num_contacts)
+        return build_cliques(self.census, max_age, radius, max_group_size, mean_num_contacts)
 
 
-def build_cliques(people, max_age, radius, max_group_size, mean_num_contacts):
+def build_cliques(census, max_age, radius, max_group_size, mean_num_contacts):
+    """
+    :param census: a lookup of population.covid.PersonCovid() objects, by id/name
+    """
+    people = list(census.values())
     n_people = len(people)
     coord = locate_population(people)
     groups = []
@@ -40,4 +44,4 @@ def build_clique(location, radius, people, people_coordinates, max_group_size, p
     diffs = people_coordinates[cidx] - location
     distances = np.sum(diffs ** 2, axis=1)
     candidates = (people[ix] for ix in cidx)
-    return set([p for i, p in enumerate(candidates) if distances[i] < radius ** 2])
+    return set([p.name for i, p in enumerate(candidates) if distances[i] < radius ** 2])
