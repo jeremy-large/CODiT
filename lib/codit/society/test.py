@@ -3,17 +3,18 @@ from collections import defaultdict
 import random
 
 class Test:
-    def __init__(self, person, notes, time_to_complete, days_delayed_start=0):
+    def __init__(self, person, notes, time_to_complete, days_delayed_start=0, census=None):
         self.days_elapsed = 0
         self.person = person
         self.positive = None
         self.days_to_complete = time_to_complete + days_delayed_start
         self.notes = notes
         self.days_delayed_start = days_delayed_start
-        targets = [q for q in person.contacts if not q.immunities]
-        self._succeptible_contacts = len(targets)
-        self._succeptible_contacts_of_contacts = \
-            len([s for v in targets for s in v.contacts if not s.immunities])
+        if census:
+            targets = [census[q] for q in person.contacts if not census[q].immunities]
+            self._succeptible_contacts = len(targets)
+            self._succeptible_contacts_of_contacts = \
+                len([census[s] for v in targets for s in v.contacts if not census[s].immunities])
         self._days_infected = person.days_infected() if person.disease else None
         self._isolating = person.isolating
         self._disease = str(person.disease or 'None')
@@ -68,14 +69,14 @@ class TestQueue:
         self._taken_and_planned.remove(test)
         self._tests_of[test.person].remove(test)
 
-    def add_test(self, person, notes, time_to_complete, front_of_queue=False, days_delayed_start=0):
+    def add_test(self, person, notes, time_to_complete, front_of_queue=False, days_delayed_start=0, census=None):
 
         if notes in [t.notes for t in self._tests_of[person]]:
             # then there's already a test being planned or processed in this queue with the same purpose as this one
             # do nothing ...
             return
 
-        test = self.test_type(person, notes, time_to_complete, days_delayed_start=days_delayed_start)
+        test = self.test_type(person, notes, time_to_complete, days_delayed_start=days_delayed_start, census=census)
         if front_of_queue:
             self._taken_and_planned.insert(0, test)
         else:

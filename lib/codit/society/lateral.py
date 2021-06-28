@@ -29,10 +29,11 @@ class LateralFlowUK(UKSociety):
         self.valency_threshold = None
         logging.info(f"The city has {self.LATERAL_TO_PCR_RATIO}x the number of lateral flow tests available, as PCRs")
 
-    def act_on_test(self, test, n_reps_lateral_test=1):
+    def act_on_test(self, test, census=None, n_reps_lateral_test=1):
         if test.positive:
-            for c in test.person.contacts:
+            for id in test.person.contacts:
                 if random.random() < self.cfg.PROB_TRACING_GIVEN_CONTACT:
+                    c = census[id]
                     if random.random() < self.cfg.PROB_GET_TEST_IF_TRACED:
                         self.get_test_request(c, notes=('contact', 1), lateral_flow=True)
             return

@@ -33,11 +33,11 @@ class Person:
         self.infectors = []
         self.chain_length = 0
         self.victims = set()
-        self.society = None
 
     def adopt_society(self, society):
-        self.society = society
-        self.episode_time = 1. / self.society.episodes_per_day
+        self.episodes_per_day = society.episodes_per_day
+        self.episode_time = 1. / society.episodes_per_day
+        self.prob_worry = society.prob_worry
 
     def __repr__(self):
         if self.name is None:
@@ -113,26 +113,26 @@ class Person:
         self.disease = None
         self.time_since_infection = 0
 
-    def update_time(self):
+    def update_time(self, society):
 
         if self.isolating:
             self.isolation.update_time(self.episode_time)
-            self.consider_leaving_isolation()
+            self.consider_leaving_isolation(society)
 
         if self.disease is not None:
             self.time_since_infection += 1
-            self.update_disease(self.days_infected())
+            self.update_disease(self.days_infected(), society)
         else:
             pass
 
     def days_infected(self):
-        return self.time_since_infection / self.society.episodes_per_day
+        return self.time_since_infection / self.episodes_per_day
 
-    def consider_leaving_isolation(self):
+    def consider_leaving_isolation(self, society=None):
         if self.isolation.days_elapsed > self.cfg.DURATION_OF_ISOLATION:
             self.leave_isolation()
 
-    def update_disease(self, days_since_infect):
+    def update_disease(self, days_since_infect, society=None):
         if days_since_infect == self.disease.days_infectious:
             self.recover()
 
