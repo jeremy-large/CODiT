@@ -6,8 +6,8 @@ class StrategicTester(UKSociety):
     MIN_CONTACTS_SYMPTOMS = 4
     MIN_CONTACTS = 2
 
-    def act_on_test(self, test, test_contacts=None):
-        UKSociety.act_on_test(self, test, test_contacts=True)
+    def act_on_test(self, test, census=None, test_contacts=False):
+        UKSociety.act_on_test(self, test, census=census, test_contacts=True)
 
     def get_test_request(self, person, notes=''):
         if len(person.contacts) < self.MIN_CONTACTS:

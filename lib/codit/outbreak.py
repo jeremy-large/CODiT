@@ -17,7 +17,7 @@ class Outbreak:
                                            reset=reset_population)
         if reset_population:
             society.clear_queues()
-            self.pop.seed_infections(seed_size, diseases)
+            self.pop.seed_infections(seed_size, diseases, society)
 
         self.initialize_timers(n_days, society.episodes_per_day)
         self.group_size = society.encounter_size
@@ -77,7 +77,7 @@ class Outbreak:
         return self.recorder
 
     def update_time(self):
-        self.pop.update_time()
+        self.pop.update_time(self.society)
         self.time += self.time_increment
         self.step_num += 1
 

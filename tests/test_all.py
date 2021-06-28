@@ -15,7 +15,7 @@ def test_uk_ovespill_model():
     from codit.disease import Covid
     random.seed(42)
     np.random.seed(42)
-    o = Outbreak(UKSociety(config=dict(PROB_NON_C19_SYMPTOMS_PER_DAY=0.1)),
+    o = Outbreak(UKSociety(census=None, config=dict(PROB_NON_C19_SYMPTOMS_PER_DAY=0.1)),
                  Covid(), pop_size=1000, seed_size=20, n_days=ALL_TIME_DAYS)
     o.simulate()
 
@@ -36,7 +36,8 @@ def test_covid_model():
     from codit.disease import Covid
     s = TestingSociety(episodes_per_day=5, config={ "MEAN_NETWORK_SIZE": 2,
                                                     "PROB_NON_C19_SYMPTOMS_PER_DAY": 0,
-                                                    "PROB_TEST_IF_REQUESTED": 0.4})
+                                                    "PROB_TEST_IF_REQUESTED": 0.4},
+                       census=None)
 
     d = Covid(days_infectious=10, pr_transmission_per_day=0.2)
     # seed size is the number of people in the population who we seed as being infected:
@@ -79,7 +80,7 @@ def test_draconian_population_model():
 
 def test_toy_model():
     random.seed(42)
-    s = Society(episodes_per_day=5, encounter_size=2)
+    s = Society(None, episodes_per_day=5, encounter_size=2)
     d = Disease(days_infectious=10, pr_transmission_per_day=0.2)
     # seed size is the number of people in the population who we seed as being infected:
     o = Outbreak(s, d, pop_size=1000, seed_size=2, n_days=ALL_TIME_DAYS, population_type=Population, person_type=Person)

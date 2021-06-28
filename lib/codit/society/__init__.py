@@ -16,9 +16,9 @@ class TestingSociety(Society):
 
     def add_test(self, person, notes, front_of_queue=False):
         q, = self.queues
-        q.add_test(person, notes, self.cfg.TEST_DAYS_ELAPSED, front_of_queue=front_of_queue)
+        q.add_test(person, notes, self.cfg.TEST_DAYS_ELAPSED, census=self.census, front_of_queue=front_of_queue)
 
-    def act_on_test(self, t):
+    def act_on_test(self, t, census):
         pass
 
     def remove_test(self, test, queue):
@@ -42,9 +42,9 @@ class TestingSociety(Society):
         for q in self.queues:
             q.update_tests(1. / self.episodes_per_day)
         self.set_actionable_tests(max_processed)
-        self.act_on_tests()
+        self.act_on_tests(population.census)
 
-    def act_on_tests(self):
+    def act_on_tests(self, census):
         for q in self.queues:
             for r_test in q.completed_tests:
                 self.remove_test(r_test, q)
@@ -53,7 +53,7 @@ class TestingSociety(Society):
                     r_test.person.has_tested_positive = True
                 #     for t in q._tests_of[r_test.person]:
                 #         q.remove_test(t)
-                self.act_on_test(r_test)
+                self.act_on_test(r_test, census)
 
     def set_actionable_tests(self, max_processed):
         for q in self.queues:
@@ -62,10 +62,11 @@ class TestingSociety(Society):
 
 class TestingTracingSociety(TestingSociety):
 
-    def act_on_test(self, test, test_contacts=False):
+    def act_on_test(self, test, census=None, test_contacts=False):
         if test.positive:
-            for c in test.person.contacts:
+            for id in test.person.contacts:
                 if random.random() < self.cfg.PROB_TRACING_GIVEN_CONTACT:
+                    c = census[id]
                     self.screen_contact_for_testing(c, do_test=test_contacts)
                     if random.random() < self.cfg.PROB_ISOLATE_IF_TRACED:
                         c.isolate()
@@ -87,14 +88,14 @@ class UKSociety(TestingTracingSociety):
 
 class ContactTestingSociety(UKSociety):
 
-    def act_on_test(self, test, test_contacts=None):
-        TestingTracingSociety.act_on_test(self, test, test_contacts=True)
+    def act_on_test(self, test, census=None, test_contacts=False):
+        TestingTracingSociety.act_on_test(self, test, census=census, test_contacts=True)
 
 
 class ContactDoubleTestingSociety(UKSociety):
 
-    def act_on_test(self, test, test_contacts=False):
-        ContactTestingSociety.act_on_test(self, test)
+    def act_on_test(self, test, census=None, test_contacts=False):
+        ContactTestingSociety.act_on_test(self, test, census=census)
 
         if not test.positive and test.notes == 'contact':
             if random.random() < self.cfg.PROB_ISOLATE_IF_TRACED:

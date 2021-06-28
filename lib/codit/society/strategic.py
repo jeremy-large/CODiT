@@ -16,8 +16,8 @@ class TwoTrackTester(UKSociety):
         self.slow_track = TestQueue()
         self.queues = (self.fast_track, self.slow_track)
 
-    def act_on_test(self, test, test_contacts=False):
-        UKSociety.act_on_test(self, test, test_contacts=True)
+    def act_on_test(self, test, census=None, test_contacts=False):
+        UKSociety.act_on_test(self, test, census=census, test_contacts=True)
 
         if not test.positive and test.notes == 'contact':
             if random.random() < self.cfg.PROB_ISOLATE_IF_TRACED:

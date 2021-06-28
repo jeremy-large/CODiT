@@ -2,7 +2,7 @@ from codit.config import set_config
 from codit.society.test import TestQueue
 
 class Society:
-    def __init__(self, episodes_per_day=None, encounter_size=None, prob_unnecessary_worry=0, config=None):
+    def __init__(self, census=None, episodes_per_day=None, encounter_size=None, prob_unnecessary_worry=0, config=None):
         set_config(self, config)
         if not prob_unnecessary_worry:
             prob_unnecessary_worry = self.cfg.PROB_NON_C19_SYMPTOMS_PER_DAY
@@ -12,6 +12,7 @@ class Society:
         self.prob_worry = prob_unnecessary_worry / self.episodes_per_day
         self.queues = [TestQueue()]
         self.test_recorder = []
+        self.census = census
 
     def manage_outbreak(self, population):
         pass

@@ -9,14 +9,16 @@ import numpy as np
 class Population:
     def __init__(self, n_people, society, person_type=None):
         person_type = person_type or Person
-        self.census = {id: person_type(id, society, config=society.cfg.__dict__) for id in range(n_people)}
+        self.census = {id: person_type(id, config=society.cfg.__dict__) for id in range(n_people)}
         self.people = self.census.values()
+        self.adopt_society(society)
 
     def reset_people(self, society):
         for person in self.people:
-            person.__init__(person.name, society, config=society.cfg.__dict__, home=person.home)
+            person.__init__(person.name, config=society.cfg.__dict__, home=person.home)
 
     def adopt_society(self, society):
+        society.census = self.census
         for person in self.people:
             person.adopt_society(society)
 
@@ -33,7 +35,7 @@ class Population:
                 continue
             for p1 in g:
                 if p1.infectious:
-                    days = 1. / p1.society.episodes_per_day
+                    days = 1. / p1.episodes_per_day
                     for p2 in g:
                         if p2 != p1:
                             p1.infectious_attack(p2, days=days)
@@ -41,8 +43,8 @@ class Population:
     def form_groupings(self, group_size):
         return (random.sample(self.census.keys(), group_size) for _ in range(len(self.people)))
 
-    def seed_infections(self, n_infected, diseases, seed_periods=None):
-        seed_infection(n_infected, self.people, diseases, seed_periods=seed_periods)
+    def seed_infections(self, n_infected, diseases, society, seed_periods=None):
+        seed_infection(n_infected, self.people, diseases, society, seed_periods=seed_periods)
 
     def count_infectious(self, disease=None):
         infected = self.infected(disease)
@@ -56,9 +58,9 @@ class Population:
             return [p for p in self.people if p.covid_experiences]
         return [p for p in self.people if disease in p.covid_experiences]
 
-    def update_time(self):
+    def update_time(self, society):
         for p in self.people:
-            p.update_time()
+            p.update_time(society)
 
     def victim_dict(self):
         """
@@ -76,7 +78,7 @@ class Population:
         return np.mean(n_victims)
 
 
-def seed_infection(n_infected, people, diseases, seed_periods=None):
+def seed_infection(n_infected, people, diseases, society, seed_periods=None):
     if type(diseases) is not set:
         diseases = {diseases}
     if type(n_infected) is not dict:
@@ -89,7 +91,7 @@ def seed_infection(n_infected, people, diseases, seed_periods=None):
             p.set_infected(d)
             stage = random.random() * seed_periods
             while p.disease and p.days_infected() < stage:
-                p.update_time()
+                p.update_time(society)
 
 
 class FixedNetworkPopulation(Population):
@@ -107,8 +109,7 @@ class FixedNetworkPopulation(Population):
             for p1 in gr_set:
                 d[p1] |= gr_set
         for p in self.people:
-            contacts = d[p.name] - {p.name}
-            p.contacts = tuple(self.census[q] for q in contacts)
+            p.contacts = d[p.name] - {p.name}
         return {p: p.contacts for p in self.people}
 
     def fix_cliques(self, mean_num_contacts, group_size=2, people=None):
