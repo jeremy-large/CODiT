@@ -35,7 +35,7 @@ class LateralFlowUK(UKSociety):
                 if random.random() < self.cfg.PROB_TRACING_GIVEN_CONTACT:
                     c = census[id]
                     if random.random() < self.cfg.PROB_GET_TEST_IF_TRACED:
-                        self.get_test_request(c, notes=('contact', 1), lateral_flow=True)
+                        self.get_test_request(c, notes=('contact', 1), lateral_flow=True, census=census)
             return
 
         if 'contact' in test.notes:
@@ -48,7 +48,7 @@ class LateralFlowUK(UKSociety):
                                   lateral_flow=True,
                                   days_delayed_start=self.DAYS_BETWEEN_REPEATED_TESTS)
 
-    def get_test_request(self, person, notes=None, lateral_flow=False, days_delayed_start=0):
+    def get_test_request(self, person, notes=None, lateral_flow=False, days_delayed_start=0, census=None):
 
         if person.has_tested_positive and not self.RETEST_POSITIVE_CASES:
             return
@@ -68,7 +68,7 @@ class LateralFlowUK(UKSociety):
         if coopt_existing_test(track, notes, person):
             return
 
-        track.add_test(person, notes, processing_days, False, days_delayed_start)
+        track.add_test(person, notes, processing_days, False, days_delayed_start, census=census)
 
         if lateral_flow and (days_delayed_start == 0):
             # isolate for the (normally) short period while they get the first test result
