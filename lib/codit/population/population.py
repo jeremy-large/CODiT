@@ -35,10 +35,9 @@ class Population:
                 continue
             for p1 in g:
                 if p1.infectious:
-                    days = 1. / p1.episodes_per_day
                     for p2 in g:
                         if p2 != p1:
-                            p1.infectious_attack(p2, days=days)
+                            p1.infectious_attack(p2, days=p1.episode_time)
 
     def form_groupings(self, group_size):
         return (random.sample(self.census.keys(), group_size) for _ in range(len(self.people)))

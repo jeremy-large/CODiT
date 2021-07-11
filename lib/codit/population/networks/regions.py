@@ -50,13 +50,15 @@ class Ward(Place):
         return f"Ward <{self.name} {self.code}>"
 
 
+with smart_open.open(POPULATION_LSOA_CSV) as fh:
+    LSOAs = pd.read_csv(fh)
+LSOAs.set_index('lsoa11cd', inplace=True)
+
+
 class LSOA(Place):
     """
     This object will keep all the information about a given LSOA
     """
-    with smart_open.open(POPULATION_LSOA_CSV) as fh:
-        LSOAs = pd.read_csv(fh)
-    LSOAs.set_index('lsoa11cd', inplace=True)
 
     def __init__(self, code, name):
         """
@@ -65,7 +67,7 @@ class LSOA(Place):
         """
         self.code = code
         self.name = name
-        self.features = self.LSOAs.loc[self.code].to_dict()
+        self.features = LSOAs.loc[self.code].to_dict()
 
     def __str__(self):
         return f"LSOA <{self.name} {self.code}>"

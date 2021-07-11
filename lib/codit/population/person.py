@@ -34,7 +34,6 @@ class Person:
         self.victims = set()
 
     def adopt_society(self, society):
-        self.episodes_per_day = society.episodes_per_day
         self.episode_time = 1. / society.episodes_per_day
         self.prob_worry = society.prob_worry
 
@@ -125,7 +124,7 @@ class Person:
             pass
 
     def days_infected(self):
-        return self.time_since_infection / self.episodes_per_day
+        return self.time_since_infection * self.episode_time
 
     def consider_leaving_isolation(self, society=None):
         if self.isolation.days_elapsed > self.cfg.DURATION_OF_ISOLATION:
